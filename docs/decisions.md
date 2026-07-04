@@ -187,3 +187,24 @@
   - Pasta `backend/src/cache/` substitui `backend/src/redis/`.
   - `ProductsService` e `AppService` injetam `CacheService`.
   - Health check mantém campo `redisConnected` (status da infra Redis subjacente).
+
+---
+
+## ADR-011 – Rate limiting com `@nestjs/throttler`
+
+- **Decisão tomada**: Aplicar rate limiting in-memory via `@nestjs/throttler` com guard global (`AppThrottlerGuard`). Limite generoso para a API de negócio (120 req/min por IP) e limite mais restrito para `GET /health` (10 req/min), pois esse endpoint consulta DB + Redis a cada request.
+- **Alternativas consideradas**:
+  - Storage Redis para throttling distribuído.
+  - Middleware Express manual.
+  - Sem rate limiting.
+- **Motivo da escolha**: Proteção leve contra abuso sem complexidade extra; in-memory é suficiente para o escopo single-node (docker-compose). Limites configuráveis via `.env` (`THROTTLE_TTL`, `THROTTLE_LIMIT`, `THROTTLE_HEALTH_LIMIT`). Desabilitado automaticamente quando `NODE_ENV=test` (e2e), salvo `THROTTLE_ENABLED=true`.
+- **Vantagens**:
+  - Integração nativa NestJS (guard global + override por rota no guard).
+  - Resposta HTTP 429 padronizada.
+  - Swagger documenta 429 em `/health`.
+- **Desvantagens**:
+  - Contadores in-memory não compartilhados entre réplicas (aceitável no escopo atual).
+- **Impacto na implementação**:
+  - Dependência `@nestjs/throttler`.
+  - `backend/src/common/throttle/` (`AppThrottlerGuard`, config).
+  - Variáveis em `backend/.env.example`.
