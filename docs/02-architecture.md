@@ -33,6 +33,7 @@ mini-loja/
 │   ├── 04-tasks.md
 │   ├── 05-insomnia-testing.md
 │   ├── 06-integration-testing.md
+│   ├── 07-design-standards.md
 │   ├── decisions.md
 │   └── progress.md
 ├── scripts/
@@ -113,24 +114,32 @@ Aplicação SPA simples, estruturada por páginas/funcionalidades:
 
 ```
 frontend/src/
-├── main.tsx (ou main.ts, conforme framework)
-├── App
+├── components/
+│   ├── ui/              # shadcn/ui (Button, Skeleton, Table, …)
+│   ├── layout/          # AppHeader, Layout
+│   ├── categories/      # CategoriesNavMenu, CategoryFormDialog
+│   ├── products/        # ProductGrid, ProductFilters, modais, skeletons
+│   └── shared/          # Pagination, EmptyState, ErrorAlert
+├── hooks/               # useDebounce, …
+├── lib/                 # cn(), formatters, category-events, product-image
 ├── pages/
 │   ├── ProductList/
 │   ├── ProductForm/
 │   └── ProductDetails/
-├── components/
 ├── services/
-│   └── api.ts        # cliente HTTP (ex: axios) para consumir o backend
+│   └── api.ts
 └── types/
-    └── product.ts, category.ts
 ```
 
+Padrões visuais e de UX: **`docs/07-design-standards.md`**.
+
 Camadas:
-- **pages** – telas requeridas pelo desafio (listagem, formulário criar/editar, detalhes).
-- **components** – elementos de UI reutilizáveis (tabela, paginação, inputs).
-- **services** – camada de comunicação HTTP com a API do backend.
-- **types** – tipagem dos modelos de Produto e Categoria (se TypeScript).
+- **pages** – telas requeridas pelo desafio (listagem, formulário criar/editar, detalhes); orquestram hooks e componentes.
+- **components/ui** – primitivos shadcn/ui.
+- **components/** – composições de domínio (produtos, layout, shared).
+- **hooks** – data fetching, filtros, debounce.
+- **services** – camada HTTP com a API do backend.
+- **types** – tipagem dos modelos de Produto e Categoria.
 
 ## 6. Comunicação Frontend/Backend
 
@@ -138,6 +147,7 @@ Camadas:
 - Frontend consome os endpoints expostos pelo `ProductsController` e `CategoriesController`.
 - URL base da API configurada via variável de ambiente no frontend (ex: `VITE_API_URL` ou equivalente).
 - CORS habilitado no backend para permitir chamadas do frontend.
+- **Sincronização de categorias no frontend:** CRUD na navbar dispara o evento customizado `mini-loja:categories-changed` (`lib/category-events.ts`); `ProductList` e `ProductForm` escutam o evento e recarregam `GET /categories` sem reload da página.
 
 ## 7. Fluxo das Requisições
 
@@ -160,7 +170,7 @@ Camadas:
 
 - **Backend**: NestJS, Prisma ORM, Redis, class-validator/class-transformer.
 - **Banco de dados**: PostgreSQL (via Docker — ADR-003).
-- **Frontend**: React + Vite (ADR-005).
+- **Frontend**: React + Vite (ADR-005), shadcn/ui (ADR-008) — ver `docs/07-design-standards.md`.
 - **Infraestrutura**: Docker e docker-compose para orquestrar backend, frontend, banco e Redis.
 
 ## 9. Justificativa da Arquitetura Escolhida
