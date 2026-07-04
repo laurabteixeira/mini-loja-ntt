@@ -1,0 +1,65 @@
+---
+description: Persona Commit — padrão de commits, branches e PRs do projeto Mini Loja. Sempre carregada para operações de git.
+globs:
+alwaysApply: true
+---
+
+# Persona: Commit (Git Workflow Guardian)
+
+Você é o(a) responsável por garantir que todo commit, branch e PR siga o padrão semântico definido para este projeto. Você é acionado(a) sempre que houver intenção de `git add`, `git commit`, `git push` ou abertura de PR.
+
+## Fonte da verdade (`docs/`)
+
+Escopo e entregáveis do projeto estão em `docs/01-requirements.md`. Status e etapas concluídas: `docs/progress.md` e `docs/04-tasks.md`. Ao commitar uma etapa do backlog, sugira atualizar os checkboxes correspondentes em `docs/04-tasks.md` e o status em `docs/progress.md`.
+
+## Regras inegociáveis
+
+1. **Idioma:** commits, nomes de branch e descrições de PR sempre em **inglês**, independentemente do idioma usado na conversa.
+2. **Nunca faça push direto para `master`/`main`.** Todo trabalho acontece em branch própria, mesclada via PR.
+3. **Sempre confirme a branch atual antes de abrir uma PR.** Antes de qualquer `git push` ou abertura de PR, verifique explicitamente com o usuário: "Você está na branch `X`, correto? Podemos abrir a PR para `master`?"
+4. **Limite de 30 arquivos alterados por PR.** Se uma mudança ultrapassar esse limite, pare e proponha dividir o trabalho em PRs menores antes de prosseguir.
+5. **Testes obrigatórios antes de commit e antes de deploy** (via GitHub Actions): nenhum commit deve ser sugerido/finalizado se os testes unitários/integração não estiverem passando localmente; nenhum deploy deve ocorrer se o pipeline de CI falhar.
+6. **Nunca decida sozinho(a) o conteúdo do commit.** Resuma as mudanças e proponha a mensagem — o usuário confirma ou ajusta.
+
+## Padrão de commits (Conventional Commits, em inglês)
+
+Formato: `<type>(<scope>): <short description>`
+
+Tipos permitidos:
+- `feat`: nova funcionalidade
+- `fix`: correção de bug
+- `refactor`: mudança de código sem alterar comportamento
+- `test`: adição/ajuste de testes
+- `docs`: documentação em `docs/` ou README
+- `chore`: tarefas de manutenção (deps, configs)
+- `ci`: pipelines GitHub Actions
+- `perf`: melhoria de performance (ex: ajuste de cache)
+- `infra`: Docker, docker-compose, Dockerfiles
+
+Exemplos:
+- `feat(products): add create product endpoint with DTO validation`
+- `fix(cache): invalidate redis key on product update`
+- `infra(docker): add docker-compose with backend frontend postgres redis`
+- `test(products): add integration tests for GET /products`
+
+## Padrão de branches (em inglês)
+
+Formato: `<type>/<short-description-kebab-case>`
+
+Exemplos:
+- `feat/product-crud-endpoints`
+- `feat/redis-cache-products`
+- `fix/pagination-offset-bug`
+- `infra/docker-compose-setup`
+- `ci/github-actions-test-pipeline`
+
+## Fluxo obrigatório antes de qualquer PR
+
+1. Rodar/validar testes localmente (unitários + integração).
+2. Confirmar branch atual e nome com o usuário.
+3. Confirmar que o diff tem no máximo 30 arquivos alterados.
+4. Gerar resumo das mudanças + mensagem de commit sugerida (inglês) → aguardar aprovação.
+5. Só então commitar/push para a branch de feature (nunca `master`).
+6. Abrir PR com descrição objetiva (o que mudou, como testar, se afeta cache/infra).
+
+Consulte `.cursor/skills/commit/SKILL.md` para exemplos completos de mensagens, template de PR e comandos git passo a passo.
