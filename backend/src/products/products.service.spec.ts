@@ -2,7 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service';
-import { RedisService } from '../redis/redis.service';
+import { CacheService } from '../cache/cache.service';
 import { ProductsService } from './products.service';
 
 describe('ProductsService', () => {
@@ -20,7 +20,7 @@ describe('ProductsService', () => {
       findUnique: jest.Mock;
     };
   };
-  let redis: {
+  let cache: {
     get: jest.Mock;
     set: jest.Mock;
     del: jest.Mock;
@@ -42,7 +42,7 @@ describe('ProductsService', () => {
       },
     };
 
-    redis = {
+    cache = {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
@@ -53,7 +53,7 @@ describe('ProductsService', () => {
       providers: [
         ProductsService,
         { provide: PrismaService, useValue: prisma },
-        { provide: RedisService, useValue: redis },
+        { provide: CacheService, useValue: cache },
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('60') },
@@ -66,11 +66,11 @@ describe('ProductsService', () => {
 
   it('returns cached product on cache hit without querying the database', async () => {
     const cachedProduct = { id: 1, name: 'Cached Product' };
-    redis.get.mockResolvedValue(JSON.stringify(cachedProduct));
+    cache.get.mockResolvedValue(JSON.stringify(cachedProduct));
 
     const result = await service.findOne(1);
 
-    expect(redis.get).toHaveBeenCalledWith('product:1');
+    expect(cache.get).toHaveBeenCalledWith('product:1');
     expect(result).toEqual(cachedProduct);
     expect(prisma.product.findUnique).not.toHaveBeenCalled();
   });
@@ -85,13 +85,13 @@ describe('ProductsService', () => {
       category: { id: 1, name: 'Cat' },
     };
 
-    redis.get.mockResolvedValue(null);
+    cache.get.mockResolvedValue(null);
     prisma.product.findUnique.mockResolvedValue(product);
 
     const result = await service.findOne(1);
 
     expect(result).toEqual(product);
-    expect(redis.set).toHaveBeenCalledWith(
+    expect(cache.set).toHaveBeenCalledWith(
       'product:1',
       JSON.stringify(product),
       60,
@@ -99,11 +99,11 @@ describe('ProductsService', () => {
   });
 
   it('throws NotFoundException when product does not exist', async () => {
-    redis.get.mockResolvedValue(null);
+    cache.get.mockResolvedValue(null);
     prisma.product.findUnique.mockResolvedValue(null);
 
     await expect(service.findOne(99)).rejects.toThrow(NotFoundException);
-    expect(redis.set).not.toHaveBeenCalled();
+    expect(cache.set).not.toHaveBeenCalled();
   });
 
   it('uses paginated list cache key with filters', async () => {
@@ -112,7 +112,7 @@ describe('ProductsService', () => {
       meta: { total: 0, page: 2, limit: 5, totalPages: 1 },
     };
 
-    redis.get.mockResolvedValue(JSON.stringify(listResult));
+    cache.get.mockResolvedValue(JSON.stringify(listResult));
 
     const result = await service.findAll({
       page: 2,
@@ -121,7 +121,7 @@ describe('ProductsService', () => {
       search: 'phone',
     });
 
-    expect(redis.get).toHaveBeenCalledWith(
+    expect(cache.get).toHaveBeenCalledWith(
       'products:list:page=2:limit=5:categoryId=3:search=phone',
     );
     expect(result).toEqual(listResult);
@@ -139,8 +139,8 @@ describe('ProductsService', () => {
 
     await service.update(1, { name: 'Updated' });
 
-    expect(redis.del).toHaveBeenCalledWith('product:1');
-    expect(redis.delByPattern).toHaveBeenCalledWith('products:list:*');
+    expect(cache.del).toHaveBeenCalledWith('product:1');
+    expect(cache.delByPattern).toHaveBeenCalledWith('products:list:*');
   });
 
   it('invalidates list cache on create', async () => {
@@ -159,6 +159,6 @@ describe('ProductsService', () => {
       categoryId: 1,
     });
 
-    expect(redis.delByPattern).toHaveBeenCalledWith('products:list:*');
+    expect(cache.delByPattern).toHaveBeenCalledWith('products:list:*');
   });
 });

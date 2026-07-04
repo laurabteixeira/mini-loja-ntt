@@ -5,7 +5,7 @@ import { AppService } from './app.service';
 import { CategoriesModule } from './categories/categories.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
-import { RedisModule } from './redis/redis.module';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { RedisModule } from './redis/redis.module';
       envFilePath: '.env',
     }),
     PrismaModule,
-    RedisModule,
+    CacheModule,
     CategoriesModule,
     ProductsModule,
   ],

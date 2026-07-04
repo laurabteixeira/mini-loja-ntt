@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from './prisma/prisma.service';
-import { RedisService } from './redis/redis.service';
+import { CacheService } from './cache/cache.service';
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
+    private readonly cache: CacheService,
   ) {}
 
   async getHealth() {
@@ -22,7 +22,7 @@ export class AppService {
       databaseConnected = false;
     }
 
-    redisConnected = await this.redis.ping();
+    redisConnected = await this.cache.ping();
 
     return {
       status: 'ok',

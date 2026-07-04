@@ -52,9 +52,12 @@ backend/src/
 ├── prisma/
 │   ├── prisma.module.ts
 │   └── prisma.service.ts
-├── redis/
-│   ├── redis.module.ts
-│   └── redis.service.ts
+├── cache/
+│   ├── cache.module.ts
+│   ├── cache.service.ts
+│   ├── cache.client.ts
+│   └── providers/
+│       └── redis-cache.client.ts
 ├── products/
 │   ├── products.module.ts
 │   ├── products.controller.ts
@@ -85,9 +88,9 @@ backend/prisma/
 O backend segue a arquitetura modular padrão do NestJS, organizada por domínio (feature modules), com separação clara de camadas:
 
 - **Controller** – recebe requisições HTTP, valida entrada (via DTOs/pipes) e delega para o service. Não contém regra de negócio.
-- **Service** – contém a regra de negócio: orquestra chamadas ao Prisma (persistência) e ao Redis (cache), aplica a lógica de invalidação de cache.
+- **Service** – contém a regra de negócio: orquestra chamadas ao Prisma (persistência) e ao cache (via `CacheService`), aplica a lógica de invalidação de cache.
 - **Prisma Module/Service** – encapsula o `PrismaClient`, expõe uma instância injetável para os demais módulos.
-- **Redis Module/Service** – encapsula o cliente Redis, expõe métodos utilitários (`get`, `set`, `del`, `delByPattern`) para uso nos services.
+- **Cache Module/Service** – expõe operações de cache (`get`, `set`, `del`, `delByPattern`) para os services de domínio; delega ao `CacheClient` injetado (implementação atual: Redis via `RedisCacheClient`).
 - **DTOs** – definem o formato de entrada esperado e aplicam validação (via `class-validator`/`class-transformer`).
 - **Modules** – `ProductsModule` e `CategoriesModule` isolam cada domínio, importados pelo `AppModule`.
 
@@ -97,16 +100,16 @@ O backend segue a arquitetura modular padrão do NestJS, organizada por domínio
 |---|---|
 | `AppModule` | Módulo raiz, importa demais módulos e configura variáveis de ambiente globais. |
 | `PrismaModule` | Provê acesso ao banco de dados via Prisma Client. |
-| `RedisModule` | Provê acesso ao Redis para cache. |
+| `CacheModule` | Provê acesso ao cache via `CacheService`; implementação atual: Redis (`RedisCacheClient`). |
 | `ProductsModule` | CRUD de produtos, regras de cache/invalidação. |
 | `CategoriesModule` | CRUD de categorias. |
 
 ### 4.2 Responsabilidades por Camada
 
 - **Controller**: roteamento HTTP, validação de entrada, resposta HTTP.
-- **Service**: regra de negócio, orquestração entre Prisma e Redis.
+- **Service**: regra de negócio, orquestração entre Prisma e cache (`CacheService`).
 - **Prisma (Repository implícito)**: acesso a dados, migrations, modelagem do schema.
-- **Redis**: cache de leitura e invalidação em escrita.
+- **Cache**: cache de leitura e invalidação em escrita (provider Redis via `CacheClient`).
 - **DTOs**: contrato de entrada/saída e validação.
 
 ## 5. Arquitetura do Frontend
@@ -155,16 +158,16 @@ Camadas:
 ### Fluxo de leitura (ex.: listar produtos)
 1. Frontend chama `GET /products?page=1&limit=10`.
 2. `ProductsController` recebe a requisição e delega ao `ProductsService`.
-3. `ProductsService` verifica se existe cache no Redis para a chave correspondente.
-4. Se existir cache → retorna os dados do Redis.
-5. Se não existir → consulta o Prisma/banco, monta a resposta, grava no Redis e retorna ao controller.
+3. `ProductsService` verifica se existe cache para a chave correspondente.
+4. Se existir cache → retorna os dados do cache.
+5. Se não existir → consulta o Prisma/banco, monta a resposta, grava no cache e retorna ao controller.
 6. Controller responde ao frontend em JSON.
 
 ### Fluxo de escrita (ex.: criar produto)
 1. Frontend envia `POST /products` com os dados no corpo da requisição.
 2. Controller valida via DTO.
 3. Service persiste o produto via Prisma.
-4. Service invalida as chaves de cache relacionadas no Redis (detalhe/lista).
+4. Service invalida as chaves de cache relacionadas (detalhe/lista).
 5. Controller responde com o produto criado.
 
 ## 8. Tecnologias Utilizadas
@@ -179,6 +182,6 @@ Camadas:
 - **Modularização por domínio no NestJS** facilita manutenção e é o padrão recomendado pelo próprio framework, além de ser um dos critérios de avaliação do desafio ("boas práticas NestJS, DTOs, módulos, services").
 - **Separação Controller/Service** mantém a regra de negócio isolada da camada HTTP, facilitando testes e evolução.
 - **Prisma** como ORM único simplifica modelagem, migrations e leitura/escrita, atendendo diretamente ao requisito do desafio.
-- **Redis isolado em módulo próprio** permite reutilizar a lógica de cache em qualquer service sem acoplamento direto a uma biblioteca específica.
+- **Redis isolado em provider de cache** (`RedisCacheClient`) permite trocar a implementação de cache sem alterar services de domínio, reutilizando a lógica via `CacheService`.
 - **Frontend simples orientado a páginas** atende exatamente às 3 telas exigidas (listagem, formulário, detalhes), sem introduzir complexidade (state managers, roteamento avançado) não solicitada pelo desafio.
 - **docker-compose** simplifica a entrega, atendendo à preferência explícita do desafio para subir o ambiente.

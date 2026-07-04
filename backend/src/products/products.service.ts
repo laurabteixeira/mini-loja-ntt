@@ -6,7 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { RedisService } from '../redis/redis.service';
+import { CacheService } from '../cache/cache.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -19,7 +19,7 @@ const productInclude = {
 export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
+    private readonly cache: CacheService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -42,7 +42,7 @@ export class ProductsService {
     const cacheKey = this.buildProductListKey(query);
     const where = this.buildListWhere(query);
 
-    const cached = await this.redis.get(cacheKey);
+    const cached = await this.cache.get(cacheKey);
     if (cached) {
       return JSON.parse(cached);
     }
@@ -70,7 +70,7 @@ export class ProductsService {
       },
     };
 
-    await this.redis.set(
+    await this.cache.set(
       cacheKey,
       JSON.stringify(result),
       this.getCacheTtl(),
@@ -81,7 +81,7 @@ export class ProductsService {
 
   async findOne(id: number) {
     const cacheKey = this.buildProductKey(id);
-    const cached = await this.redis.get(cacheKey);
+    const cached = await this.cache.get(cacheKey);
 
     if (cached) {
       return JSON.parse(cached);
@@ -96,7 +96,7 @@ export class ProductsService {
       throw new NotFoundException(`Product with id ${id} not found`);
     }
 
-    await this.redis.set(
+    await this.cache.set(
       cacheKey,
       JSON.stringify(product),
       this.getCacheTtl(),
@@ -191,11 +191,11 @@ export class ProductsService {
   }
 
   private async invalidateProductCache(id: number): Promise<void> {
-    await this.redis.del(this.buildProductKey(id));
+    await this.cache.del(this.buildProductKey(id));
   }
 
   private async invalidateProductLists(): Promise<void> {
-    await this.redis.delByPattern('products:list:*');
+    await this.cache.delByPattern('products:list:*');
   }
 
   private async ensureProductExists(id: number): Promise<void> {

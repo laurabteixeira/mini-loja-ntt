@@ -1,18 +1,18 @@
 import { INestApplication } from '@nestjs/common/interfaces';
 import * as request from 'supertest';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { RedisService } from '../src/redis/redis.service';
+import { CacheService } from '../src/cache/cache.service';
 import { createTestApp } from './test-app';
 
 describe('App (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let redis: RedisService;
+  let cache: CacheService;
 
   beforeAll(async () => {
     app = await createTestApp();
     prisma = app.get(PrismaService);
-    redis = app.get(RedisService);
+    cache = app.get(CacheService);
   });
 
   afterAll(async () => {
@@ -22,8 +22,8 @@ describe('App (e2e)', () => {
   beforeEach(async () => {
     await prisma.product.deleteMany();
     await prisma.category.deleteMany();
-    await redis.delByPattern('product:*');
-    await redis.delByPattern('products:list:*');
+    await cache.delByPattern('product:*');
+    await cache.delByPattern('products:list:*');
   });
 
   it('GET /health returns database and redis status', () => {
@@ -75,12 +75,12 @@ describe('Categories (e2e)', () => {
 describe('Products cache (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let redis: RedisService;
+  let cache: CacheService;
 
   beforeAll(async () => {
     app = await createTestApp();
     prisma = app.get(PrismaService);
-    redis = app.get(RedisService);
+    cache = app.get(CacheService);
   });
 
   afterAll(async () => {
@@ -90,8 +90,8 @@ describe('Products cache (e2e)', () => {
   beforeEach(async () => {
     await prisma.product.deleteMany();
     await prisma.category.deleteMany();
-    await redis.delByPattern('product:*');
-    await redis.delByPattern('products:list:*');
+    await cache.delByPattern('product:*');
+    await cache.delByPattern('products:list:*');
   });
 
   it('caches product detail and invalidates on update', async () => {
@@ -109,21 +109,21 @@ describe('Products cache (e2e)', () => {
     const productId = created.body.id;
 
     await request(app.getHttpServer()).get(`/products/${productId}`).expect(200);
-    expect(await redis.get(`product:${productId}`)).not.toBeNull();
+    expect(await cache.get(`product:${productId}`)).not.toBeNull();
 
     await request(app.getHttpServer())
       .patch(`/products/${productId}`)
       .send({ name: 'NestJS Guide (2nd ed.)' })
       .expect(200);
 
-    expect(await redis.get(`product:${productId}`)).toBeNull();
+    expect(await cache.get(`product:${productId}`)).toBeNull();
   });
 
   it('caches paginated list and invalidates on create', async () => {
     const category = await prisma.category.create({ data: { name: 'Games' } });
 
     await request(app.getHttpServer()).get('/products?page=1&limit=10').expect(200);
-    expect(await redis.get('products:list:page=1:limit=10')).not.toBeNull();
+    expect(await cache.get('products:list:page=1:limit=10')).not.toBeNull();
 
     await request(app.getHttpServer())
       .post('/products')
@@ -135,6 +135,6 @@ describe('Products cache (e2e)', () => {
       })
       .expect(201);
 
-    expect(await redis.get('products:list:page=1:limit=10')).toBeNull();
+    expect(await cache.get('products:list:page=1:limit=10')).toBeNull();
   });
 });
