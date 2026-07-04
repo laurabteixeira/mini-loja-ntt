@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -38,7 +39,8 @@ export class ProductsService {
   async findAll(query: QueryProductDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
-    const cacheKey = this.buildProductListKey(page, limit);
+    const cacheKey = this.buildProductListKey(query);
+    const where = this.buildListWhere(query);
 
     const cached = await this.redis.get(cacheKey);
     if (cached) {
@@ -49,12 +51,13 @@ export class ProductsService {
 
     const [data, total] = await Promise.all([
       this.prisma.product.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { id: 'asc' },
         include: productInclude,
       }),
-      this.prisma.product.count(),
+      this.prisma.product.count({ where }),
     ]);
 
     const result = {
@@ -152,8 +155,39 @@ export class ProductsService {
     return `product:${id}`;
   }
 
-  private buildProductListKey(page: number, limit: number): string {
-    return `products:list:page=${page}:limit=${limit}`;
+  private buildProductListKey(query: QueryProductDto): string {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const parts = [`page=${page}`, `limit=${limit}`];
+
+    if (query.categoryId !== undefined) {
+      parts.push(`categoryId=${query.categoryId}`);
+    }
+
+    const search = query.search?.trim();
+    if (search) {
+      parts.push(`search=${encodeURIComponent(search)}`);
+    }
+
+    return `products:list:${parts.join(':')}`;
+  }
+
+  private buildListWhere(query: QueryProductDto): Prisma.ProductWhereInput {
+    const where: Prisma.ProductWhereInput = {};
+
+    if (query.categoryId !== undefined) {
+      where.categoryId = query.categoryId;
+    }
+
+    const search = query.search?.trim();
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    return where;
   }
 
   private async invalidateProductCache(id: number): Promise<void> {

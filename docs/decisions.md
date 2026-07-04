@@ -89,8 +89,28 @@
 - **Impacto na implementação**:
   - Projeto criado com `npm create vite@latest frontend -- --template react-ts` (ou equivalente).
   - URL base da API via `VITE_API_URL` no `.env.example` do frontend.
+  - Evolução de UI/UX: ver **ADR-008** e `docs/07-design-standards.md`.
 
 ---
+
+## ADR-008 – UI: shadcn/ui e padrões de design
+
+- **Decisão tomada**: Adotar **shadcn/ui** (Tailwind + Radix, componentes no repositório) como biblioteca de UI do frontend, seguindo `docs/07-design-standards.md` (UI minimalista preto/branco, skeletons, filtros, componentização).
+- **Alternativas consideradas**:
+  - Manter apenas Tailwind “manual” (estado atual pós-Etapa 14).
+  - Material UI / Chakra UI (bibliotecas fechadas com tema próprio).
+- **Motivo da escolha**: shadcn/ui oferece componentes acessíveis e customizáveis sem impor identidade visual saturada; alinha ao pedido de código limpo, separação de componentes e experiência fluida. Já previsto na stack do projeto (`docs/02-architecture.md` menciona Shadcn como opção).
+- **Vantagens**:
+  - Componentes copiados — controle total sobre estilo monocromático.
+  - Skeleton, Dialog, Table, Badge prontos para filtros e estados de loading.
+  - Integração natural com Tailwind já presente no Vite.
+- **Desvantagens**:
+  - Setup inicial (CLI, `components/ui/`, CSS variables).
+  - Escopo extra pós-entrega do desafio (melhoria, não requisito do PDF).
+- **Impacto na implementação**:
+  - Pasta `frontend/src/components/ui/` para componentes shadcn.
+  - Refatorar pages para `components/products/`, `hooks/`, `lib/`.
+  - Backend: estender `QueryProductDto` se filtros (`categoryId`, `search`) forem expostos na API (cache keys em `03-cache-strategy.md`).
 
 ## ADR-006 – Orquestração via Docker Compose
 
@@ -126,3 +146,24 @@
   - `schema.prisma`: `categoryId Int` (sem `?`); relação com `onDelete: Restrict`.
   - `CreateProductDto`: `@IsInt()`, `@IsNotEmpty()` em `categoryId`; validar existência da categoria no service.
   - `CategoriesService.remove`: capturar erro Prisma `P2003` (foreign key) ou checar `_count.products` antes do delete e retornar 409.
+
+---
+
+## ADR-009 – Campo opcional `imageUrl` em Produto
+
+- **Decisão tomada**: Adicionar campo opcional `imageUrl String?` no model `Product`, exposto nos DTOs de create/update. No frontend, usar placeholder estático (`/placeholder.png`) quando `imageUrl` estiver vazio; upload real fica fora do escopo atual.
+- **Alternativas consideradas**:
+  - Manter apenas ícone genérico (sem asset).
+  - Upload para S3 + URL persistida (escopo futuro).
+- **Motivo da escolha**: Evolução de UI/UX pós-entrega; permite testar layout com imagens via URL sem implementar storage ainda.
+- **Vantagens**:
+  - API preparada para integração futura com S3/CDN.
+  - UX consistente com placeholder visual enquanto upload não existe.
+- **Desvantagens**:
+  - Campo extra fora do PDF original do desafio.
+  - URLs externas podem quebrar (sem validação de conteúdo).
+- **Impacto na implementação**:
+  - Migration `20260704180000_add_product_image_url`.
+  - DTOs: `@IsOptional() @IsUrl()` em `imageUrl`.
+  - Frontend: `lib/product-image.ts` com fallback para `/placeholder.png`.
+  - Campo de URL no formulário permanece **disabled** até implementação de upload.

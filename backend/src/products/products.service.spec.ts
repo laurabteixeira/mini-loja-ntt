@@ -106,7 +106,7 @@ describe('ProductsService', () => {
     expect(redis.set).not.toHaveBeenCalled();
   });
 
-  it('uses paginated list cache key', async () => {
+  it('uses paginated list cache key with filters', async () => {
     const listResult = {
       data: [],
       meta: { total: 0, page: 2, limit: 5, totalPages: 1 },
@@ -114,9 +114,16 @@ describe('ProductsService', () => {
 
     redis.get.mockResolvedValue(JSON.stringify(listResult));
 
-    const result = await service.findAll({ page: 2, limit: 5 });
+    const result = await service.findAll({
+      page: 2,
+      limit: 5,
+      categoryId: 3,
+      search: 'phone',
+    });
 
-    expect(redis.get).toHaveBeenCalledWith('products:list:page=2:limit=5');
+    expect(redis.get).toHaveBeenCalledWith(
+      'products:list:page=2:limit=5:categoryId=3:search=phone',
+    );
     expect(result).toEqual(listResult);
     expect(prisma.product.findMany).not.toHaveBeenCalled();
   });

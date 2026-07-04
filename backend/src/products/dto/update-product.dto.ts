@@ -6,8 +6,10 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  IsUrl,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 export class UpdateProductDto {
@@ -34,4 +36,10 @@ export class UpdateProductDto {
   @IsInt()
   @Min(1)
   categoryId?: number;
+
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null && value !== '')
+  @IsString()
+  @IsUrl({ require_protocol: true })
+  imageUrl?: string | null;
 }
