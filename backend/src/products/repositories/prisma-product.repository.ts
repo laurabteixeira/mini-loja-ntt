@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateProductDto } from '../dto/create-product.dto';
-import { UpdateProductDto } from '../dto/update-product.dto';
+import {
+  ProductCreateInput,
+  ProductUpdateInput,
+} from '../mappers/product-input.mapper';
 import {
   ProductListFilters,
   ProductWithCategory,
@@ -18,7 +20,7 @@ const productInclude = {
 export class PrismaProductRepository implements ProductRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreateProductDto): Promise<ProductWithCategory> {
+  async create(data: ProductCreateInput): Promise<ProductWithCategory> {
     const product = await this.prisma.product.create({
       data,
       include: productInclude,
@@ -70,7 +72,7 @@ export class PrismaProductRepository implements ProductRepository {
 
   async update(
     id: number,
-    data: UpdateProductDto,
+    data: ProductUpdateInput,
   ): Promise<ProductWithCategory> {
     const product = await this.prisma.product.update({
       where: { id },

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
@@ -13,6 +12,7 @@ import { CacheService } from '../cache/cache.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductInputMapper } from './mappers/product-input.mapper';
 import {
   PRODUCT_REPOSITORY,
   ProductRepository,
@@ -30,9 +30,11 @@ export class ProductsService {
   ) {}
 
   async create(createProductDto: CreateProductDto) {
-    await this.ensureCategoryExists(createProductDto.categoryId);
+    const input = ProductInputMapper.toCreateInput(createProductDto);
 
-    const product = await this.productRepository.create(createProductDto);
+    await this.ensureCategoryExists(input.categoryId);
+
+    const product = await this.productRepository.create(input);
 
     await this.invalidateProductLists();
 
@@ -99,19 +101,15 @@ export class ProductsService {
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
-    if (Object.keys(updateProductDto).length === 0) {
-      throw new BadRequestException(
-        'At least one field must be provided for update',
-      );
-    }
+    const input = ProductInputMapper.toUpdateInput(updateProductDto);
 
     await this.ensureProductExists(id);
 
-    if (updateProductDto.categoryId !== undefined) {
-      await this.ensureCategoryExists(updateProductDto.categoryId);
+    if (input.categoryId !== undefined) {
+      await this.ensureCategoryExists(input.categoryId);
     }
 
-    const product = await this.productRepository.update(id, updateProductDto);
+    const product = await this.productRepository.update(id, input);
 
     await this.invalidateProductCache(id);
     await this.invalidateProductLists();

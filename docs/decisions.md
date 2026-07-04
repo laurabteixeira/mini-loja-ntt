@@ -265,3 +265,24 @@
   - Testes e2e em `backend/test/validation.e2e-spec.ts`.
   - Formulários frontend com `maxLength` alinhado.
 
+---
+
+## ADR-014 – Input mappers e payload helpers (DTO → persistência)
+
+- **Decisão tomada**: Separar mappers de **saída** (`ProductMapper`, `CategoryMapper` — Prisma → entity) de mappers de **entrada** (`ProductInputMapper`, `CategoryInputMapper` — DTO → input de persistência). Regras de payload PATCH (body vazio, normalização de `imageUrl` `''` → `null`) ficam nos input mappers, apoiados por `common/payload/partial-update.helper.ts`. Services orquestram negócio/cache; repositories recebem tipos `*CreateInput` / `*UpdateInput`, não DTOs HTTP.
+- **Alternativas consideradas**:
+  - Manter `Object.keys(dto).length === 0` nos services (rejeitado — mistura validação de payload com regra de negócio).
+  - Apenas helper genérico no service (rejeitado — não desacopla DTO de Prisma).
+  - Custom decorator `class-validator` no DTO (rejeitado — validação de composição de PATCH encaixa melhor na camada de mapeamento).
+- **Motivo da escolha**: Estende ADR-012 com fronteira clara HTTP (DTO) ↔ persistência (input types), facilitando testes unitários dos mappers e evolução de normalizações sem inflar services.
+- **Vantagens**:
+  - Services mais enxutos (`ProductInputMapper.toUpdateInput(dto)`).
+  - Repositories independentes de contrato Swagger/HTTP.
+  - Helper compartilhado para PATCH vazio em qualquer domínio.
+- **Desvantagens**:
+  - Mais um arquivo por feature module (`*-input.mapper.ts`).
+- **Impacto na implementação**:
+  - `backend/src/common/payload/partial-update.helper.ts`
+  - `product-input.mapper.ts`, `category-input.mapper.ts`
+  - Interfaces de repository usam `*CreateInput` / `*UpdateInput`
+

@@ -68,7 +68,8 @@ backend/src/
 │   │   ├── product.repository.ts
 │   │   └── prisma-product.repository.ts
 │   ├── mappers/
-│   │   └── product.mapper.ts
+│   │   ├── product.mapper.ts
+│   │   └── product-input.mapper.ts
 │   └── dto/
 │       ├── create-product.dto.ts
 │       ├── update-product.dto.ts
@@ -83,12 +84,16 @@ backend/src/
 │   │   ├── category.repository.ts
 │   │   └── prisma-category.repository.ts
 │   ├── mappers/
-│   │   └── category.mapper.ts
+│   │   ├── category.mapper.ts
+│   │   └── category-input.mapper.ts
 │   └── dto/
 │       ├── create-category.dto.ts
 │       └── update-category.dto.ts
 └── common/
     ├── filters/
+    ├── payload/
+    │   └── partial-update.helper.ts
+    ├── validation/
     ├── interceptors/
     ├── pipes/
     └── throttle/
@@ -108,7 +113,10 @@ O backend segue a arquitetura modular padrão do NestJS, organizada por domínio
 - **Service** – contém a regra de negócio: orquestra chamadas ao repositório (persistência) e ao cache (via `CacheService`), aplica a lógica de invalidação de cache.
 - **Prisma Module/Service** – encapsula o `PrismaClient`; usado apenas pelas implementações `Prisma*Repository`.
 - **Repository** – interface por domínio (`ProductRepository`, `CategoryRepository`) com implementação Prisma injetada via token NestJS; isola queries de banco dos services.
-- **Mapper** – converte registros Prisma em entities de leitura/domínio (ex.: `_count` → `productCount`, nested `category`).
+- **Mapper** – conversão bidirecional por domínio:
+  - `*.mapper.ts` — Prisma → entity de leitura (ex.: `_count` → `productCount`).
+  - `*-input.mapper.ts` — DTO HTTP → input de persistência; valida PATCH vazio via `partial-update.helper`.
+- **Payload helpers** (`common/payload/`) — invariantes reutilizáveis de payload (ex.: body parcial não vazio).
 - **Cache Module/Service** – expõe operações de cache (`get`, `set`, `del`, `delByPattern`) para os services de domínio; delega ao `CacheClient` injetado (implementação atual: Redis via `RedisCacheClient`).
 - **DTOs** – definem o formato de entrada esperado e aplicam validação (via `class-validator`/`class-transformer`).
 - **Rate limiting** – `@nestjs/throttler` com guard global (`AppThrottlerGuard`): limite generoso na API (120 req/min por IP) e limite restrito em `GET /health` (10 req/min), configurável via `.env`.
@@ -129,7 +137,7 @@ O backend segue a arquitetura modular padrão do NestJS, organizada por domínio
 - **Controller**: roteamento HTTP, validação de entrada, resposta HTTP.
 - **Service**: regra de negócio, orquestração entre repository e cache (`CacheService`).
 - **Repository**: acesso a dados via interface + `Prisma*Repository`; services não usam `PrismaService` diretamente.
-- **Mapper**: transformação Prisma → entity de resposta.
+- **Mapper**: transformação Prisma → entity; **Input mapper**: DTO → input de persistência.
 - **Prisma Module/Service**: client ORM compartilhado, consumido apenas pelos repositórios.
 - **Cache**: cache de leitura e invalidação em escrita (provider Redis via `CacheClient`).
 - **DTOs**: contrato de entrada/saída e validação.
