@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  backend:
+    name: Backend — lint, unit & e2e
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mini_loja
+          POSTGRES_PASSWORD: mini_loja
+          POSTGRES_DB: mini_loja
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mini_loja -d mini_loja"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://mini_loja:mini_loja@localhost:5432/mini_loja
+      REDIS_URL: redis://localhost:6379
+      CACHE_TTL: 60
+      CORS_ORIGIN: http://localhost:5173
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check backend package exists
+        id: backend
+        working-directory: .
+        run: |
+          if [ -f backend/package.json ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js
+        if: steps.backend.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        if: steps.backend.outputs.exists == 'true'
+        run: npm ci
+
+      - name: Generate Prisma client
+        if: steps.backend.outputs.exists == 'true'
+        run: npx prisma generate
+
+      - name: Lint
+        if: steps.backend.outputs.exists == 'true'
+        run: npm run lint
+
+      - name: Unit tests
+        if: steps.backend.outputs.exists == 'true'
+        run: npm run test
+
+      - name: E2E tests
+        if: steps.backend.outputs.exists == 'true'
+        run: npm run test:e2e
+
+      - name: Skip notice
+        if: steps.backend.outputs.exists != 'true'
+        run: echo "Backend not present in this revision — skipping tests."
