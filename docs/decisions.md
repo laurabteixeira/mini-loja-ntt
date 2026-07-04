@@ -231,3 +231,37 @@
   - `CategoriesModule` exporta `CATEGORY_REPOSITORY` para uso em `ProductsService`.
   - Testes unitários mockam repositories em vez de `PrismaService`.
 
+---
+
+## ADR-013 – Limites de validação de campos (DTO layer)
+
+- **Decisão tomada**: Definir limites máximos de entrada nos DTOs via `class-validator` (`@MaxLength`, `@Max`), centralizados em `backend/src/common/validation/field-limits.ts`, com paridade Swagger (`minLength`/`maxLength`/`maximum`). Descrição de produto limitada a **400 caracteres** (alinhada ao frontend). Enforcement apenas na camada API — **sem** `@db.VarChar` no Prisma nesta etapa.
+- **Alternativas consideradas**:
+  - Limites apenas no frontend (rejeitado — bypass via API direta).
+  - Descrição com 2000 caracteres no backend (rejeitado — diverge do UX atual).
+  - Migration Prisma com `@db.VarChar(n)` (adiado — pode ser ADR futuro).
+- **Motivo da escolha**: Fechar gaps apontados pela persona `pentester` (RF06): prevenir payloads oversized e documentar contrato OpenAPI. Opção A (400 chars) mantém paridade com o formulário React existente.
+- **Limites adotados**:
+
+| Campo | Máximo |
+|---|---|
+| `Category.name` | 100 caracteres |
+| `Product.name` | 200 caracteres |
+| `Product.description` | 400 caracteres |
+| `Product.imageUrl` | 2048 caracteres |
+| `Product.price` | 9 999 999,99 |
+| `QueryProductDto.search` | 100 caracteres |
+| `QueryProductDto.limit` | 100 |
+| `QueryProductDto.page` | 10 000 |
+
+- **Vantagens**:
+  - Proteção contra strings/valores extremos na API.
+  - Constantes reutilizáveis; frontend espelha em `frontend/src/lib/field-limits.ts`.
+  - Path `:id` rejeita valores `< 1` via `PositiveIntPipe`.
+- **Desvantagens**:
+  - Banco Postgres ainda aceita textos maiores se dados forem inseridos fora da API.
+- **Impacto na implementação**:
+  - DTOs de products/categories atualizados.
+  - Testes e2e em `backend/test/validation.e2e-spec.ts`.
+  - Formulários frontend com `maxLength` alinhado.
+

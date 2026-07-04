@@ -6,10 +6,10 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
 } from '@nestjs/common';
+import { positiveIntPipe } from '../common/validation/positive-int.pipe';
 import {
   ApiCreatedResponse,
   ApiNoContentResponse,
@@ -55,7 +55,7 @@ export class CategoriesController {
   @ApiParam({ name: 'id', example: 1 })
   @ApiOkResponse({ type: CategoryResponseDto })
   @ApiCategoryByIdErrorResponses()
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', positiveIntPipe) id: number) {
     return this.categoriesService.findOne(id);
   }
 
@@ -65,7 +65,7 @@ export class CategoriesController {
   @ApiOkResponse({ type: CategoryResponseDto })
   @ApiCategoryUpdateErrorResponses()
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', positiveIntPipe) id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
     return this.categoriesService.update(id, updateCategoryDto);
@@ -81,7 +81,7 @@ export class CategoriesController {
   @ApiParam({ name: 'id', example: 1 })
   @ApiNoContentResponse({ description: 'Category deleted' })
   @ApiCategoryDeleteErrorResponses()
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', positiveIntPipe) id: number) {
     return this.categoriesService.remove(id);
   }
 }
