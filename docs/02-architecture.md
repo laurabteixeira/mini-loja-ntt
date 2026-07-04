@@ -76,7 +76,10 @@ backend/src/
 └── common/
     ├── filters/
     ├── interceptors/
-    └── pipes/
+    ├── pipes/
+    └── throttle/
+        ├── app-throttler.guard.ts
+        └── throttle.config.ts
 
 backend/prisma/
 ├── schema.prisma
@@ -92,6 +95,7 @@ O backend segue a arquitetura modular padrão do NestJS, organizada por domínio
 - **Prisma Module/Service** – encapsula o `PrismaClient`, expõe uma instância injetável para os demais módulos.
 - **Cache Module/Service** – expõe operações de cache (`get`, `set`, `del`, `delByPattern`) para os services de domínio; delega ao `CacheClient` injetado (implementação atual: Redis via `RedisCacheClient`).
 - **DTOs** – definem o formato de entrada esperado e aplicam validação (via `class-validator`/`class-transformer`).
+- **Rate limiting** – `@nestjs/throttler` com guard global (`AppThrottlerGuard`): limite generoso na API (120 req/min por IP) e limite restrito em `GET /health` (10 req/min), configurável via `.env`.
 - **Modules** – `ProductsModule` e `CategoriesModule` isolam cada domínio, importados pelo `AppModule`.
 
 ### 4.1 Módulos
