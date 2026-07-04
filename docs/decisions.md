@@ -37,18 +37,21 @@
 
 ## ADR-003 – Banco de Dados Relacional
 
-- **Decisão tomada**: A definir entre PostgreSQL ou SQLite no momento da implementação (ambos permitidos pelo desafio).
+- **Decisão tomada**: Usar **PostgreSQL** como banco de dados relacional, executado via **Docker** no `docker-compose.yml` (serviço `postgres`).
 - **Alternativas consideradas**:
   - PostgreSQL (via Docker)
   - SQLite (arquivo local, zero configuração)
   - MySQL
-- **Motivo da escolha**: Ambos atendem ao requisito do desafio; a escolha final impacta apenas a configuração do `docker-compose` e da `DATABASE_URL`. Recomenda-se PostgreSQL caso se deseje demonstrar uso mais próximo de produção (via Docker), ou SQLite para simplicidade máxima de execução local sem dependências externas.
+- **Motivo da escolha**: PostgreSQL é mais representativo de um ambiente de produção real, combina naturalmente com a orquestração via `docker-compose` (ADR-006) e atende ao requisito do desafio de banco relacional suportado pelo Prisma.
 - **Vantagens**:
-  - PostgreSQL: mais próximo de um cenário de produção real, fácil de orquestrar via docker-compose.
-  - SQLite: zero configuração, ideal para rodar rapidamente sem Docker.
+  - Ambiente consistente entre desenvolvimento e avaliação (container dedicado).
+  - Integração madura com Prisma (migrations, tipagem via Prisma Client).
+  - Alinhado ao fluxo de entrega com um único `docker compose up`.
 - **Desvantagens**:
-  - PostgreSQL: exige um container adicional.
-  - SQLite: menos representativo de um ambiente de produção real.
+  - Exige um container adicional em relação ao SQLite (custo aceitável no escopo do desafio).
+- **Impacto na implementação**:
+  - `DATABASE_URL` apontando para o serviço `postgres` do compose (ex.: `postgresql://user:pass@postgres:5432/mini_loja`).
+  - Serviço `postgres` no `docker-compose.yml` com volume persistente e healthcheck.
 
 ---
 
@@ -71,16 +74,21 @@
 
 ## ADR-005 – Framework de Frontend
 
-- **Decisão tomada**: A definir entre React, VueJS ou Angular no momento da implementação (todas as opções são aceitas pelo desafio).
+- **Decisão tomada**: Usar **React** com **Vite** como bundler/dev server para o frontend em `frontend/`.
 - **Alternativas consideradas**:
-  - React
+  - React + Vite
   - VueJS
   - Angular
-- **Motivo da escolha**: O desafio permite qualquer uma das três opções e avalia apenas funcionalidade, não design. A escolha final deve priorizar produtividade e familiaridade da equipe/desenvolvedor.
-- **Vantagens/Desvantagens**: A ser detalhado no momento da escolha final, mas de forma geral:
-  - React: grande ecossistema, flexibilidade, curva de aprendizado moderada.
-  - Vue: simplicidade e curva de aprendizado suave.
-  - Angular: mais estruturado, porém mais verboso para um projeto pequeno.
+- **Motivo da escolha**: React atende ao requisito do desafio (RF04/RNF04), Vite oferece setup rápido e DX moderna para um SPA simples com três telas, sem complexidade desnecessária.
+- **Vantagens**:
+  - Grande ecossistema e documentação; fácil integrar roteamento (`react-router-dom`) e client HTTP (axios/fetch).
+  - Vite: build e HMR rápidos; variáveis de ambiente via `VITE_*` (ex.: `VITE_API_URL`).
+  - Estrutura alinhada a `docs/02-architecture.md` (pages, components, services, types).
+- **Desvantagens**:
+  - Curva de aprendizado moderada se a equipe não tiver familiaridade com React (não aplicável se for a stack escolhida).
+- **Impacto na implementação**:
+  - Projeto criado com `npm create vite@latest frontend -- --template react-ts` (ou equivalente).
+  - URL base da API via `VITE_API_URL` no `.env.example` do frontend.
 
 ---
 
@@ -95,3 +103,26 @@
   - Ambiente consistente entre diferentes máquinas.
 - **Desvantagens**:
   - Exige Docker instalado na máquina de quem for rodar (mitigado por também fornecer instruções manuais como alternativa).
+
+---
+
+## ADR-007 – Regras de Modelagem: Produto e Categoria
+
+- **Decisão tomada**:
+  1. **`categoryId` obrigatório** — todo Produto deve estar vinculado a uma Categoria existente (`categoryId` não-nulo no schema e campo obrigatório no `CreateProductDto` / `UpdateProductDto`).
+  2. **Impedir delete acidental de Categoria com produtos** — ao tentar remover uma Categoria que possui Produtos vinculados, a operação deve falhar (`onDelete: Restrict` no Prisma + tratamento de erro HTTP adequado, ex.: **409 Conflict** ou **400 Bad Request** com mensagem clara).
+- **Alternativas consideradas**:
+  - `categoryId` opcional (produto sem categoria).
+  - `onDelete: Cascade` (remover categoria apaga todos os produtos vinculados).
+  - `onDelete: SetNull` (produtos ficam sem categoria).
+- **Motivo da escolha**: O desafio exige relação Produto → Categoria (RF03); tornar `categoryId` obrigatório reflete essa regra de negócio. `Restrict` evita perda acidental de dados ao deletar uma categoria ainda em uso — o usuário deve remover ou reatribuir os produtos antes.
+- **Vantagens**:
+  - Integridade referencial garantida no banco e na API.
+  - Comportamento previsível e seguro para um CRUD de loja.
+  - Mensagem de erro explícita orienta o fluxo correto (ex.: "Cannot delete category with linked products").
+- **Desvantagens**:
+  - Delete de categoria exige passo extra (esvaziar ou migrar produtos antes) — aceitável no escopo do desafio.
+- **Impacto na implementação**:
+  - `schema.prisma`: `categoryId Int` (sem `?`); relação com `onDelete: Restrict`.
+  - `CreateProductDto`: `@IsInt()`, `@IsNotEmpty()` em `categoryId`; validar existência da categoria no service.
+  - `CategoriesService.remove`: capturar erro Prisma `P2003` (foreign key) ou checar `_count.products` antes do delete e retornar 409.
