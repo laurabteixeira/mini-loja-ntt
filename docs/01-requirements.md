@@ -46,7 +46,7 @@ Criar uma aplicação dividida em **backend (NestJS)** e **frontend (React, VueJ
 | name | string | nome do produto |
 | description | string | descrição do produto |
 | price | float | preço do produto |
-| categoryId | relacionamento | referência à Categoria |
+| categoryId | relacionamento | referência à Categoria (**obrigatório** — ADR-007) |
 
 ### 4.2 Categoria (`Category`)
 | Campo | Tipo | Observação |
@@ -57,6 +57,8 @@ Criar uma aplicação dividida em **backend (NestJS)** e **frontend (React, VueJ
 ## 5. Relacionamentos
 
 - Um **Produto** pertence a uma **Categoria** (relação N:1 de Produto para Categoria).
+- **`categoryId` é obrigatório** — produto não pode existir sem categoria (ADR-007).
+- **Delete de Categoria com produtos vinculados é bloqueado** — `onDelete: Restrict`; API retorna erro claro (ADR-007).
 
 ## 6. Requisitos do Backend (NestJS + Prisma + Redis)
 

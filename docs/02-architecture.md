@@ -31,6 +31,7 @@ mini-loja/
 │   ├── 02-architecture.md
 │   ├── 03-cache-strategy.md
 │   ├── 04-tasks.md
+│   ├── 05-insomnia-testing.md
 │   ├── decisions.md
 │   └── progress.md
 ├── docker-compose.yml
@@ -155,8 +156,8 @@ Camadas:
 ## 8. Tecnologias Utilizadas
 
 - **Backend**: NestJS, Prisma ORM, Redis, class-validator/class-transformer.
-- **Banco de dados**: PostgreSQL ou SQLite (via Prisma).
-- **Frontend**: React, VueJS ou Angular (uma opção, a definir na implementação).
+- **Banco de dados**: PostgreSQL (via Docker — ADR-003).
+- **Frontend**: React + Vite (ADR-005).
 - **Infraestrutura**: Docker e docker-compose para orquestrar backend, frontend, banco e Redis.
 
 ## 9. Justificativa da Arquitetura Escolhida
