@@ -114,9 +114,9 @@
 
 ## Etapa 14 – Documentação e Entrega
 
-- [ ] Escrever `README.md` final (máx. 1 página): como subir backend/frontend, como testar endpoints, estratégia de cache
-- [ ] Revisar `.env.example` de backend e frontend
-- [ ] Validar subida completa via `docker-compose up`
-- [ ] Revisar estrutura final do repositório
-- [ ] Atualizar `docs/progress.md` com status final
-- [ ] Publicar repositório (GitHub ou similar)
+- [x] Escrever `README.md` final (máx. 1 página): como subir backend/frontend, como testar endpoints, estratégia de cache
+- [x] Revisar `.env.example` de backend e frontend
+- [x] Validar subida completa via `docker-compose up`
+- [x] Revisar estrutura final do repositório
+- [x] Atualizar `docs/progress.md` com status final
+- [x] Publicar repositório (GitHub ou similar)

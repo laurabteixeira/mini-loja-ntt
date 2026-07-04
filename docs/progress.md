@@ -4,9 +4,9 @@
 
 ## Status Geral do Projeto
 
-- **Status**: 🟡 Em andamento
-- **Fase atual**: Etapa 13 concluída; próxima: Etapa 14 (Documentação e entrega)
-- **Próxima fase**: README final e publicação (Etapa 14 de `04-tasks.md`)
+- **Status**: 🟢 Concluído
+- **Fase atual**: Etapa 14 concluída (Documentação e entrega)
+- **Repositório**: https://github.com/laurabteixeira/mini-loja-ntt
 
 ## Tarefas Concluídas
 
@@ -19,40 +19,31 @@
 - [x] ADR-003 confirmada: PostgreSQL via Docker
 - [x] ADR-005 confirmada: React + Vite no frontend
 - [x] ADR-007 confirmada: `categoryId` obrigatório; delete de categoria com produtos bloqueado (`Restrict`)
-- [x] Etapa 0 – Setup do Repositório (`04-tasks.md`)
-- [x] Etapa 1 – Infraestrutura Base Docker (`04-tasks.md`; compose validado localmente)
-- [x] Etapa 2 – Backend NestJS setup (`04-tasks.md`)
-- [x] Etapa 3 – Prisma + schema + migration + seed (`04-tasks.md`)
-- [x] Etapa 4 – Módulo de Categorias CRUD (`04-tasks.md`)
-- [x] Etapa 5 – Módulo de Produtos CRUD (`04-tasks.md`)
-- [x] Etapa 6 – Integração Redis (`04-tasks.md`)
-- [x] Etapa 7 – Cache em Produtos (`04-tasks.md`)
-- [x] Etapa 8 – Revisão e qualidade do backend (`04-tasks.md`; ESLint + testes unitários/e2e)
-- [x] Etapa 9 – Frontend setup React + Vite (`04-tasks.md`)
-- [x] Etapa 10 – ProductList com paginação (`04-tasks.md`)
-- [x] Etapa 11 – ProductForm create/edit (`04-tasks.md`)
-- [x] Etapa 12 – ProductDetails (`04-tasks.md`)
-- [x] Etapa 13 – Integração final (`04-tasks.md`; script + guia `06-integration-testing.md`)
+- [x] Etapas 0–14 de `docs/04-tasks.md` (setup → entrega)
+- [x] CI: backend (lint, unit, e2e) + frontend (lint, build)
+- [x] Repositório publicado no GitHub
 
 ## Tarefas em Andamento
 
-- Nenhuma tarefa de implementação em andamento no momento.
+- Merge das PRs abertas (#3 frontend, #4 integração) em `main`.
 
 ## Tarefas Pendentes
 
-- Etapa 14 – Documentação e entrega (`04-tasks.md`): README final, revisão dos `.env.example`, validação completa do compose, publicação do repositório.
+- Nenhuma etapa do backlog pendente.
 
 ## Riscos
 
-- **Estratégia de invalidação de listagem ampla** (invalida todas as páginas) pode gerar mais cache misses do que o ideal em cenários com muitos produtos — risco aceito conforme `03-cache-strategy.md`.
-- **Dependência de Docker** para o fluxo de execução recomendado — compose validado localmente (`docker compose up --build backend`).
+- **Estratégia de invalidação de listagem ampla** (invalida todas as páginas) — risco aceito conforme `03-cache-strategy.md`.
+- **Dependência de Docker** para o fluxo recomendado — compose validado localmente.
 
 ## Observações
 
-- Toda a documentação inicial foi baseada exclusivamente no PDF do desafio, sem inclusão de requisitos não solicitados.
-- Backend e frontend implementados (Etapas 2–13); CI cobre lint/testes do backend e lint/build do frontend.
-- Após revisão (Etapa 8): ESLint configurado; testes unitários e e2e cobrindo cache Redis e ADR-007.
+- Documentação baseada no PDF do desafio; detalhes em `docs/`.
+- Backend: NestJS + Prisma + Redis cache-aside; testes unitários e e2e.
+- Frontend: React + Vite; listagem, formulário, detalhes, integração via compose.
+- Entrega validada: `docker compose up --build` + `./scripts/validate-integration.sh`.
 
 ## Próximos Passos
 
-1. Etapa 14 – README final e revisão de entrega (`04-tasks.md`).
+1. Merge PR #3 e PR #4 em `main`.
+2. (Opcional) Deploy em ECS/S3 via Terraform — fora do escopo mínimo do desafio.
