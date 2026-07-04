@@ -1,0 +1,157 @@
+import { NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
+import { ProductsService } from './products.service';
+
+describe('ProductsService', () => {
+  let service: ProductsService;
+  let prisma: {
+    product: {
+      create: jest.Mock;
+      findMany: jest.Mock;
+      count: jest.Mock;
+      findUnique: jest.Mock;
+      update: jest.Mock;
+      delete: jest.Mock;
+    };
+    category: {
+      findUnique: jest.Mock;
+    };
+  };
+  let redis: {
+    get: jest.Mock;
+    set: jest.Mock;
+    del: jest.Mock;
+    delByPattern: jest.Mock;
+  };
+
+  beforeEach(async () => {
+    prisma = {
+      product: {
+        create: jest.fn(),
+        findMany: jest.fn(),
+        count: jest.fn(),
+        findUnique: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+      },
+      category: {
+        findUnique: jest.fn(),
+      },
+    };
+
+    redis = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      delByPattern: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ProductsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: RedisService, useValue: redis },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue('60') },
+        },
+      ],
+    }).compile();
+
+    service = module.get(ProductsService);
+  });
+
+  it('returns cached product on cache hit without querying the database', async () => {
+    const cachedProduct = { id: 1, name: 'Cached Product' };
+    redis.get.mockResolvedValue(JSON.stringify(cachedProduct));
+
+    const result = await service.findOne(1);
+
+    expect(redis.get).toHaveBeenCalledWith('product:1');
+    expect(result).toEqual(cachedProduct);
+    expect(prisma.product.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('stores product in cache on cache miss', async () => {
+    const product = {
+      id: 1,
+      name: 'Product',
+      description: 'Desc',
+      price: 10,
+      categoryId: 1,
+      category: { id: 1, name: 'Cat' },
+    };
+
+    redis.get.mockResolvedValue(null);
+    prisma.product.findUnique.mockResolvedValue(product);
+
+    const result = await service.findOne(1);
+
+    expect(result).toEqual(product);
+    expect(redis.set).toHaveBeenCalledWith(
+      'product:1',
+      JSON.stringify(product),
+      60,
+    );
+  });
+
+  it('throws NotFoundException when product does not exist', async () => {
+    redis.get.mockResolvedValue(null);
+    prisma.product.findUnique.mockResolvedValue(null);
+
+    await expect(service.findOne(99)).rejects.toThrow(NotFoundException);
+    expect(redis.set).not.toHaveBeenCalled();
+  });
+
+  it('uses paginated list cache key', async () => {
+    const listResult = {
+      data: [],
+      meta: { total: 0, page: 2, limit: 5, totalPages: 1 },
+    };
+
+    redis.get.mockResolvedValue(JSON.stringify(listResult));
+
+    const result = await service.findAll({ page: 2, limit: 5 });
+
+    expect(redis.get).toHaveBeenCalledWith('products:list:page=2:limit=5');
+    expect(result).toEqual(listResult);
+    expect(prisma.product.findMany).not.toHaveBeenCalled();
+  });
+
+  it('invalidates product detail and list caches on update', async () => {
+    prisma.product.findUnique.mockResolvedValue({ id: 1 });
+    prisma.product.update.mockResolvedValue({
+      id: 1,
+      name: 'Updated',
+      categoryId: 1,
+      category: { id: 1, name: 'Cat' },
+    });
+
+    await service.update(1, { name: 'Updated' });
+
+    expect(redis.del).toHaveBeenCalledWith('product:1');
+    expect(redis.delByPattern).toHaveBeenCalledWith('products:list:*');
+  });
+
+  it('invalidates list cache on create', async () => {
+    prisma.category.findUnique.mockResolvedValue({ id: 1, name: 'Cat' });
+    prisma.product.create.mockResolvedValue({
+      id: 1,
+      name: 'New',
+      categoryId: 1,
+      category: { id: 1, name: 'Cat' },
+    });
+
+    await service.create({
+      name: 'New',
+      description: 'Desc',
+      price: 10,
+      categoryId: 1,
+    });
+
+    expect(redis.delByPattern).toHaveBeenCalledWith('products:list:*');
+  });
+});
