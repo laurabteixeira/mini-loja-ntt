@@ -31,16 +31,18 @@ export function AppHeader() {
             >
               Produtos
             </NavLink>
-            <CategoriesNavMenu />
           </nav>
         </div>
 
-        <Button asChild size="sm">
-          <Link to="/products/new">
-            <Plus className="h-4 w-4" />
-            Novo produto
-          </Link>
-        </Button>
+        <div className="flex shrink-0 items-center gap-3">
+          <CategoriesNavMenu />
+          <Button asChild size="sm">
+            <Link to="/products/new">
+              <Plus className="h-4 w-4" />
+              Novo produto
+            </Link>
+          </Button>
+        </div>
       </div>
     </header>
   );
