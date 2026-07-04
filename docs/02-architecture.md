@@ -32,8 +32,11 @@ mini-loja/
 │   ├── 03-cache-strategy.md
 │   ├── 04-tasks.md
 │   ├── 05-insomnia-testing.md
+│   ├── 06-integration-testing.md
 │   ├── decisions.md
 │   └── progress.md
+├── scripts/
+│   └── validate-integration.sh
 ├── docker-compose.yml
 └── README.md
 ```
