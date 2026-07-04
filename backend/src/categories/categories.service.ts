@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -7,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CategoryInputMapper } from './mappers/category-input.mapper';
 import {
   CATEGORY_REPOSITORY,
   CategoryRepository,
@@ -20,7 +20,9 @@ export class CategoriesService {
   ) {}
 
   create(createCategoryDto: CreateCategoryDto) {
-    return this.categoryRepository.create(createCategoryDto);
+    return this.categoryRepository.create(
+      CategoryInputMapper.toCreateInput(createCategoryDto),
+    );
   }
 
   findAll() {
@@ -38,15 +40,11 @@ export class CategoriesService {
   }
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    if (Object.keys(updateCategoryDto).length === 0) {
-      throw new BadRequestException(
-        'At least one field must be provided for update',
-      );
-    }
+    const input = CategoryInputMapper.toUpdateInput(updateCategoryDto);
 
     await this.findOne(id);
 
-    return this.categoryRepository.update(id, updateCategoryDto);
+    return this.categoryRepository.update(id, input);
   }
 
   async remove(id: number) {

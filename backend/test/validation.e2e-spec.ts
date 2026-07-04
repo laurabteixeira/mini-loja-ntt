@@ -159,4 +159,22 @@ describe('Input validation (e2e)', () => {
       .send({ name: 'A'.repeat(FIELD_LIMITS.categoryName + 1) })
       .expect(400);
   });
+
+  it('PATCH /products/:id rejects empty body', async () => {
+    const categoryId = await createCategory();
+    const created = await request(app.getHttpServer())
+      .post('/products')
+      .send({
+        name: 'Valid Product',
+        description: 'Valid description',
+        price: 10,
+        categoryId,
+      })
+      .expect(201);
+
+    return request(app.getHttpServer())
+      .patch(`/products/${created.body.id}`)
+      .send({})
+      .expect(400);
+  });
 });
