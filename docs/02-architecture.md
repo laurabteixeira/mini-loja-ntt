@@ -62,6 +62,13 @@ backend/src/
 │   ├── products.module.ts
 │   ├── products.controller.ts
 │   ├── products.service.ts
+│   ├── entities/
+│   │   └── product.entity.ts
+│   ├── repositories/
+│   │   ├── product.repository.ts
+│   │   └── prisma-product.repository.ts
+│   ├── mappers/
+│   │   └── product.mapper.ts
 │   └── dto/
 │       ├── create-product.dto.ts
 │       ├── update-product.dto.ts
@@ -70,6 +77,13 @@ backend/src/
 │   ├── categories.module.ts
 │   ├── categories.controller.ts
 │   ├── categories.service.ts
+│   ├── entities/
+│   │   └── category.entity.ts
+│   ├── repositories/
+│   │   ├── category.repository.ts
+│   │   └── prisma-category.repository.ts
+│   ├── mappers/
+│   │   └── category.mapper.ts
 │   └── dto/
 │       ├── create-category.dto.ts
 │       └── update-category.dto.ts
@@ -88,8 +102,10 @@ backend/prisma/
 O backend segue a arquitetura modular padrão do NestJS, organizada por domínio (feature modules), com separação clara de camadas:
 
 - **Controller** – recebe requisições HTTP, valida entrada (via DTOs/pipes) e delega para o service. Não contém regra de negócio.
-- **Service** – contém a regra de negócio: orquestra chamadas ao Prisma (persistência) e ao cache (via `CacheService`), aplica a lógica de invalidação de cache.
-- **Prisma Module/Service** – encapsula o `PrismaClient`, expõe uma instância injetável para os demais módulos.
+- **Service** – contém a regra de negócio: orquestra chamadas ao repositório (persistência) e ao cache (via `CacheService`), aplica a lógica de invalidação de cache.
+- **Prisma Module/Service** – encapsula o `PrismaClient`; usado apenas pelas implementações `Prisma*Repository`.
+- **Repository** – interface por domínio (`ProductRepository`, `CategoryRepository`) com implementação Prisma injetada via token NestJS; isola queries de banco dos services.
+- **Mapper** – converte registros Prisma em entities de leitura/domínio (ex.: `_count` → `productCount`, nested `category`).
 - **Cache Module/Service** – expõe operações de cache (`get`, `set`, `del`, `delByPattern`) para os services de domínio; delega ao `CacheClient` injetado (implementação atual: Redis via `RedisCacheClient`).
 - **DTOs** – definem o formato de entrada esperado e aplicam validação (via `class-validator`/`class-transformer`).
 - **Modules** – `ProductsModule` e `CategoriesModule` isolam cada domínio, importados pelo `AppModule`.
@@ -107,8 +123,10 @@ O backend segue a arquitetura modular padrão do NestJS, organizada por domínio
 ### 4.2 Responsabilidades por Camada
 
 - **Controller**: roteamento HTTP, validação de entrada, resposta HTTP.
-- **Service**: regra de negócio, orquestração entre Prisma e cache (`CacheService`).
-- **Prisma (Repository implícito)**: acesso a dados, migrations, modelagem do schema.
+- **Service**: regra de negócio, orquestração entre repository e cache (`CacheService`).
+- **Repository**: acesso a dados via interface + `Prisma*Repository`; services não usam `PrismaService` diretamente.
+- **Mapper**: transformação Prisma → entity de resposta.
+- **Prisma Module/Service**: client ORM compartilhado, consumido apenas pelos repositórios.
 - **Cache**: cache de leitura e invalidação em escrita (provider Redis via `CacheClient`).
 - **DTOs**: contrato de entrada/saída e validação.
 

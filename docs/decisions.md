@@ -187,3 +187,26 @@
   - Pasta `backend/src/cache/` substitui `backend/src/redis/`.
   - `ProductsService` e `AppService` injetam `CacheService`.
   - Health check mantém campo `redisConnected` (status da infra Redis subjacente).
+
+---
+
+## ADR-012 – Repository + Mapper Pattern por feature module
+
+- **Decisão tomada**: Introduzir camadas `Repository` (interface + `Prisma*Repository`) e `Mapper` (Prisma → entity) dentro de cada feature module (`products/`, `categories/`). Services de domínio injetam repositórios via tokens NestJS (`PRODUCT_REPOSITORY`, `CATEGORY_REPOSITORY`) e não acessam `PrismaService` diretamente.
+- **Alternativas consideradas**:
+  - Manter acesso direto ao `PrismaService` nos services (repository implícito).
+  - Clean Architecture com pastas globais `domain/application/infrastructure`.
+  - Mapper apenas pontual, sem entities.
+- **Motivo da escolha**: Desacoplar regra de negócio da persistência Prisma, facilitando testes (mock de repository) e evolução do ORM, sem over-engineering de Clean Architecture — alinhado a [NestJS Database](https://docs.nestjs.com/techniques/database) e à modularização por domínio em `docs/02-architecture.md`.
+- **Vantagens**:
+  - Services focados em regra de negócio + cache.
+  - Mappers centralizam transformações (ex.: `_count` → `productCount`).
+  - Padrão de injeção consistente com `CacheClient` (ADR-010).
+- **Desvantagens**:
+  - Mais arquivos por feature module.
+  - `AppService` (health) ainda usa `PrismaService` para `$queryRaw` — fora do escopo CRUD.
+- **Impacto na implementação**:
+  - Pastas `entities/`, `repositories/`, `mappers/` em `products/` e `categories/`.
+  - `CategoriesModule` exporta `CATEGORY_REPOSITORY` para uso em `ProductsService`.
+  - Testes unitários mockam repositories em vez de `PrismaService`.
+

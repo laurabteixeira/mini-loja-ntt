@@ -1,45 +1,34 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import {
+  CATEGORY_REPOSITORY,
+  CategoryRepository,
+} from './repositories/category.repository';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(CATEGORY_REPOSITORY)
+    private readonly categoryRepository: CategoryRepository,
+  ) {}
 
   create(createCategoryDto: CreateCategoryDto) {
-    return this.prisma.category.create({
-      data: createCategoryDto,
-    });
+    return this.categoryRepository.create(createCategoryDto);
   }
 
   findAll() {
-    return this.prisma.category
-      .findMany({
-        orderBy: { id: 'asc' },
-        include: {
-          _count: {
-            select: { products: true },
-          },
-        },
-      })
-      .then((categories) =>
-        categories.map(({ _count, ...category }) => ({
-          ...category,
-          productCount: _count.products,
-        })),
-      );
+    return this.categoryRepository.findAll();
   }
 
   async findOne(id: number) {
-    const category = await this.prisma.category.findUnique({
-      where: { id },
-    });
+    const category = await this.categoryRepository.findById(id);
 
     if (!category) {
       throw new NotFoundException(`Category with id ${id} not found`);
@@ -57,34 +46,23 @@ export class CategoriesService {
 
     await this.findOne(id);
 
-    return this.prisma.category.update({
-      where: { id },
-      data: updateCategoryDto,
-    });
+    return this.categoryRepository.update(id, updateCategoryDto);
   }
 
   async remove(id: number) {
-    const category = await this.prisma.category.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { products: true },
-        },
-      },
-    });
+    const category =
+      await this.categoryRepository.findByIdWithProductCount(id);
 
     if (!category) {
       throw new NotFoundException(`Category with id ${id} not found`);
     }
 
-    if (category._count.products > 0) {
+    if (category.productCount > 0) {
       throw new ConflictException(
         'Cannot delete category with linked products',
       );
     }
 
-    return this.prisma.category.delete({
-      where: { id },
-    });
+    return this.categoryRepository.delete(id);
   }
 }

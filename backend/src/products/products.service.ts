@@ -1,24 +1,30 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import {
+  CATEGORY_REPOSITORY,
+  CategoryRepository,
+} from '../categories/repositories/category.repository';
 import { CacheService } from '../cache/cache.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-
-const productInclude = {
-  category: true,
-} as const;
+import {
+  PRODUCT_REPOSITORY,
+  ProductRepository,
+} from './repositories/product.repository';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(PRODUCT_REPOSITORY)
+    private readonly productRepository: ProductRepository,
+    @Inject(CATEGORY_REPOSITORY)
+    private readonly categoryRepository: CategoryRepository,
     private readonly cache: CacheService,
     private readonly configService: ConfigService,
   ) {}
@@ -26,10 +32,7 @@ export class ProductsService {
   async create(createProductDto: CreateProductDto) {
     await this.ensureCategoryExists(createProductDto.categoryId);
 
-    const product = await this.prisma.product.create({
-      data: createProductDto,
-      include: productInclude,
-    });
+    const product = await this.productRepository.create(createProductDto);
 
     await this.invalidateProductLists();
 
@@ -40,25 +43,18 @@ export class ProductsService {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const cacheKey = this.buildProductListKey(query);
-    const where = this.buildListWhere(query);
 
     const cached = await this.cache.get(cacheKey);
     if (cached) {
       return JSON.parse(cached);
     }
 
-    const skip = (page - 1) * limit;
-
-    const [data, total] = await Promise.all([
-      this.prisma.product.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { id: 'asc' },
-        include: productInclude,
-      }),
-      this.prisma.product.count({ where }),
-    ]);
+    const { data, total } = await this.productRepository.findManyPaginated({
+      page,
+      limit,
+      categoryId: query.categoryId,
+      search: query.search,
+    });
 
     const result = {
       data,
@@ -87,10 +83,7 @@ export class ProductsService {
       return JSON.parse(cached);
     }
 
-    const product = await this.prisma.product.findUnique({
-      where: { id },
-      include: productInclude,
-    });
+    const product = await this.productRepository.findById(id);
 
     if (!product) {
       throw new NotFoundException(`Product with id ${id} not found`);
@@ -118,11 +111,7 @@ export class ProductsService {
       await this.ensureCategoryExists(updateProductDto.categoryId);
     }
 
-    const product = await this.prisma.product.update({
-      where: { id },
-      data: updateProductDto,
-      include: productInclude,
-    });
+    const product = await this.productRepository.update(id, updateProductDto);
 
     await this.invalidateProductCache(id);
     await this.invalidateProductLists();
@@ -133,10 +122,7 @@ export class ProductsService {
   async remove(id: number) {
     await this.ensureProductExists(id);
 
-    const product = await this.prisma.product.delete({
-      where: { id },
-      include: productInclude,
-    });
+    const product = await this.productRepository.delete(id);
 
     await this.invalidateProductCache(id);
     await this.invalidateProductLists();
@@ -172,24 +158,6 @@ export class ProductsService {
     return `products:list:${parts.join(':')}`;
   }
 
-  private buildListWhere(query: QueryProductDto): Prisma.ProductWhereInput {
-    const where: Prisma.ProductWhereInput = {};
-
-    if (query.categoryId !== undefined) {
-      where.categoryId = query.categoryId;
-    }
-
-    const search = query.search?.trim();
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    return where;
-  }
-
   private async invalidateProductCache(id: number): Promise<void> {
     await this.cache.del(this.buildProductKey(id));
   }
@@ -199,22 +167,17 @@ export class ProductsService {
   }
 
   private async ensureProductExists(id: number): Promise<void> {
-    const product = await this.prisma.product.findUnique({
-      where: { id },
-      select: { id: true },
-    });
+    const exists = await this.productRepository.existsById(id);
 
-    if (!product) {
+    if (!exists) {
       throw new NotFoundException(`Product with id ${id} not found`);
     }
   }
 
   private async ensureCategoryExists(categoryId: number) {
-    const category = await this.prisma.category.findUnique({
-      where: { id: categoryId },
-    });
+    const exists = await this.categoryRepository.existsById(categoryId);
 
-    if (!category) {
+    if (!exists) {
       throw new NotFoundException(`Category with id ${categoryId} not found`);
     }
   }
