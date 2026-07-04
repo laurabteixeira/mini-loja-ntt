@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, Pencil, Plus, Tags, Trash2 } from 'lucide-react';
 import { CategoryDeleteDialog } from '@/components/products/CategoryDeleteDialog';
 import { CategoryFormDialog } from '@/components/categories/CategoryFormDialog';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { dispatchCategoriesChanged } from '@/lib/category-events';
-import { cn } from '@/lib/utils';
 import { ApiError } from '@/services/api';
 import {
   createCategory,
@@ -183,22 +182,19 @@ export function CategoriesNavMenu() {
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button
+          <Button
             type="button"
+            size="sm"
             aria-expanded={open}
             aria-haspopup="dialog"
-            className={cn(
-              'inline-flex items-center gap-1 font-medium transition-colors duration-300 ease-out',
-              'hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              open ? 'text-foreground' : 'text-muted-foreground',
-            )}
           >
+            <Tags className="h-4 w-4" />
             Categorias
             <ChevronDown className="h-4 w-4 opacity-70" />
-          </button>
+          </Button>
         </PopoverTrigger>
 
-        <PopoverContent align="start" className="w-64 p-0">
+        <PopoverContent align="end" className="w-64 p-0">
           <div className="flex items-center gap-2 border-b border-border p-3">
             <Input
               value={search}

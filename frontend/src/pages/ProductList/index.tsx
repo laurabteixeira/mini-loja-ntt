@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductCatalogHeader } from '@/components/products/ProductCatalogHeader';
 import { ProductDeleteDialog } from '@/components/products/ProductDeleteDialog';
@@ -61,6 +61,15 @@ export function ProductListPage() {
     useState<DeleteProductModalState>({ open: false });
 
   const debouncedSearch = useDebounce(search, 300);
+  const filterableCategories = useMemo(
+    () => categoriesWithProducts(categories),
+    [categories],
+  );
+
+  const handleCategoryChange = useCallback((categoryId: number | null) => {
+    setSelectedCategoryId(categoryId);
+    setPage(1);
+  }, []);
 
   const reloadCategories = useCallback(async () => {
     try {
@@ -127,11 +136,6 @@ export function ProductListPage() {
     void loadProducts();
   }, [loadProducts]);
 
-  const handleCategoryChange = (categoryId: number | null) => {
-    setSelectedCategoryId(categoryId);
-    setPage(1);
-  };
-
   const handleSearchChange = (value: string) => {
     setSearch(value);
   };
@@ -192,7 +196,7 @@ export function ProductListPage() {
       <ProductFilters
         search={search}
         onSearchChange={handleSearchChange}
-        categories={categoriesWithProducts(categories)}
+        categories={filterableCategories}
         selectedCategoryId={selectedCategoryId}
         onCategoryChange={handleCategoryChange}
       />
