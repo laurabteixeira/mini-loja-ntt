@@ -167,3 +167,23 @@
   - DTOs: `@IsOptional() @IsUrl()` em `imageUrl`.
   - Frontend: `lib/product-image.ts` com fallback para `/placeholder.png`.
   - Campo de URL no formulário permanece **disabled** até implementação de upload.
+
+---
+
+## ADR-010 – Abstração de cache via CacheClient
+
+- **Decisão tomada**: Substituir o acoplamento direto a `RedisService` por uma camada `CacheModule → CacheService → CacheClient`, com Redis como provider concreto (`RedisCacheClient`) registrado via token de injeção NestJS (`CACHE_CLIENT`).
+- **Alternativas consideradas**:
+  - Manter `RedisModule`/`RedisService` expostos diretamente aos services de domínio.
+  - Wrapper fino sem interface/token (classe concreta única).
+- **Motivo da escolha**: Desacoplar services de negócio da implementação de cache, facilitando troca futura de provider (ex.: Memcached, in-memory) alterando apenas o registro no `CacheModule`, sem mudanças em `ProductsService` ou estratégia de chaves/TTL em `docs/03-cache-strategy.md`.
+- **Vantagens**:
+  - Padrão alinhado ao [NestJS Providers](https://docs.nestjs.com/providers) (custom provider com `useClass`).
+  - Testes mockam `CacheService` sem conhecer ioredis.
+  - Estratégia de cache (chaves, TTL, invalidação) permanece inalterada.
+- **Desvantagens**:
+  - Pequeno aumento de arquivos (`cache.client.ts`, `cache.constants.ts`, provider).
+- **Impacto na implementação**:
+  - Pasta `backend/src/cache/` substitui `backend/src/redis/`.
+  - `ProductsService` e `AppService` injetam `CacheService`.
+  - Health check mantém campo `redisConnected` (status da infra Redis subjacente).
