@@ -34,6 +34,7 @@ mini-loja/
 │   ├── 05-insomnia-testing.md
 │   ├── 06-integration-testing.md
 │   ├── 07-design-standards.md
+│   ├── 08-api-swagger.md
 │   ├── decisions.md
 │   └── progress.md
 ├── scripts/

@@ -1,6 +1,7 @@
 # 05 – Testes de API no Insomnia
 
 > Guia para testar manualmente os endpoints do backend Mini Loja usando [Insomnia](https://insomnia.rest/).  
+> **Alternativa:** documentação interativa em http://localhost:3000/docs — ver [`08-api-swagger.md`](08-api-swagger.md).  
 > **Escopo atual:** Health + Categorias + Produtos com **cache Redis** (Etapas 4–7).
 
 ## 1. Pré-requisitos

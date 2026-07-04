@@ -31,6 +31,7 @@
 - [x] Navbar: menu Categorias (Popover) com CRUD, busca e scroll
 - [x] Backend: filtros `categoryId`/`search` na listagem + chaves de cache
 - [x] Backend: `productCount` em `GET /categories`; campo `imageUrl` opcional
+- [x] Swagger / OpenAPI em `GET /docs` (`docs/08-api-swagger.md`)
 
 ## Tarefas em Andamento
 
@@ -50,7 +51,7 @@
 ## Observações
 
 - Documentação baseada no PDF do desafio; detalhes em `docs/`.
-- Backend: NestJS + Prisma + Redis cache-aside; testes unitários e e2e.
+- Backend: NestJS + Prisma + Redis cache-aside; testes unitários e e2e; Swagger em `/docs`.
 - Frontend: React + Vite + shadcn/ui; listagem, formulário, detalhes, navbar de categorias.
 - Entrega validada: `docker compose up --build` + `./scripts/validate-integration.sh`.
 - Alterações de categoria na navbar disparam evento `mini-loja:categories-changed` para sincronizar filtros/formulário.

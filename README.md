@@ -15,6 +15,8 @@ docker compose up --build
 |---------|-----|
 | Frontend | http://localhost:5173 |
 | Backend | http://localhost:3000 |
+| **Swagger UI** | http://localhost:3000/docs |
+| OpenAPI JSON | http://localhost:3000/docs-json |
 | Health | http://localhost:3000/health |
 | PostgreSQL (host) | `localhost:5433` |
 | Redis | `localhost:6379` |
@@ -24,6 +26,10 @@ O backend aplica `prisma migrate deploy` e **seed** no startup (`RUN_SEED=true` 
 Variáveis de ambiente: `.env.example` (compose), `backend/.env.example`, `frontend/.env.example`.
 
 ## Como testar
+
+**Swagger (recomendado para explorar a API):**
+
+Abra http://localhost:3000/docs após subir o projeto. Detalhes em [`docs/08-api-swagger.md`](docs/08-api-swagger.md).
 
 **Endpoints (API):**
 
