@@ -3,8 +3,10 @@ import {
   IsInt,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsPositive,
   IsString,
+  IsUrl,
   Min,
   MinLength,
 } from 'class-validator';
@@ -30,4 +32,9 @@ export class CreateProductDto {
   @Min(1)
   @IsNotEmpty()
   categoryId: number;
+
+  @IsOptional()
+  @IsString()
+  @IsUrl({ require_protocol: true })
+  imageUrl?: string;
 }

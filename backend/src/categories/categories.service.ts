@@ -19,9 +19,21 @@ export class CategoriesService {
   }
 
   findAll() {
-    return this.prisma.category.findMany({
-      orderBy: { id: 'asc' },
-    });
+    return this.prisma.category
+      .findMany({
+        orderBy: { id: 'asc' },
+        include: {
+          _count: {
+            select: { products: true },
+          },
+        },
+      })
+      .then((categories) =>
+        categories.map(({ _count, ...category }) => ({
+          ...category,
+          productCount: _count.products,
+        })),
+      );
   }
 
   async findOne(id: number) {
