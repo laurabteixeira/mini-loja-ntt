@@ -112,25 +112,25 @@ Criar uma aplicação dividida em **backend (NestJS)** e **frontend (React, VueJ
 
 ## 12. Checklist de Requisitos Obrigatórios
 
-- [ ] Backend em NestJS
-- [ ] Prisma ORM configurado
-- [ ] Banco relacional (PostgreSQL ou SQLite) configurado via Prisma
-- [ ] Entidade Produto (id, name, description, price, categoryId)
-- [ ] Entidade Categoria (id, name)
-- [ ] Relacionamento Produto → Categoria
-- [ ] CRUD completo de Produto
-- [ ] CRUD completo de Categoria
-- [ ] DTOs com validação mínima
-- [ ] Redis configurado (local ou Docker)
-- [ ] Cache em `GET /products/:id`
-- [ ] Cache em `GET /products` (lista paginada)
-- [ ] Invalidação de cache em create/update/delete de produto
-- [ ] Frontend em React, VueJS ou Angular
-- [ ] Página de listagem de produtos
-- [ ] Formulário de criação/edição de produto
-- [ ] Página de detalhes de produto
-- [ ] Frontend consumindo a API do backend
-- [ ] Variáveis de ambiente em `.env`
-- [ ] Repositório hospedado (GitHub ou similar)
-- [ ] Instruções de execução (docker-compose ou manual)
-- [ ] README (máx. 1 página) com: subir projeto, testar endpoints, estratégia de cache
+- [x] Backend em NestJS
+- [x] Prisma ORM configurado
+- [x] Banco relacional (PostgreSQL ou SQLite) configurado via Prisma
+- [x] Entidade Produto (id, name, description, price, categoryId)
+- [x] Entidade Categoria (id, name)
+- [x] Relacionamento Produto → Categoria
+- [x] CRUD completo de Produto
+- [x] CRUD completo de Categoria
+- [x] DTOs com validação mínima
+- [x] Redis configurado (local ou Docker)
+- [x] Cache em `GET /products/:id`
+- [x] Cache em `GET /products` (lista paginada)
+- [x] Invalidação de cache em create/update/delete de produto
+- [x] Frontend em React, VueJS ou Angular
+- [x] Página de listagem de produtos
+- [x] Formulário de criação/edição de produto
+- [x] Página de detalhes de produto
+- [x] Frontend consumindo a API do backend
+- [x] Variáveis de ambiente em `.env`
+- [x] Repositório hospedado (GitHub ou similar)
+- [x] Instruções de execução (docker-compose ou manual)
+- [x] README (máx. 1 página) com: subir projeto, testar endpoints, estratégia de cache

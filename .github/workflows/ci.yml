@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - 'backend/**'
+      - 'frontend/**'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
       - 'backend/**'
+      - 'frontend/**'
       - '.github/workflows/ci.yml'
 
 jobs:
@@ -95,3 +97,52 @@ jobs:
       - name: Skip notice
         if: steps.backend.outputs.exists != 'true'
         run: echo "Backend not present in this revision — skipping tests."
+
+  frontend:
+    name: Frontend — lint & build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      VITE_API_URL: http://localhost:3000
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check frontend package exists
+        id: frontend
+        working-directory: .
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js
+        if: steps.frontend.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        if: steps.frontend.outputs.exists == 'true'
+        run: npm ci
+
+      - name: Lint
+        if: steps.frontend.outputs.exists == 'true'
+        run: npm run lint
+
+      - name: Build
+        if: steps.frontend.outputs.exists == 'true'
+        run: npm run build
+
+      - name: Skip notice
+        if: steps.frontend.outputs.exists != 'true'
+        run: echo "Frontend not present in this revision — skipping lint and build."

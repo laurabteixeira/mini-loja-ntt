@@ -79,44 +79,44 @@
 
 ## Etapa 9 – Frontend: Setup
 
-- [ ] Criar projeto frontend (React, VueJS ou Angular — conforme decisão registrada em `decisions.md`)
-- [ ] Configurar variável de ambiente com a URL base da API
-- [ ] Criar client HTTP (ex.: axios/fetch wrapper) em `services/api`
-- [ ] Configurar roteamento entre as 3 páginas exigidas
+- [x] Criar projeto frontend (React, VueJS ou Angular — conforme decisão registrada em `decisions.md`)
+- [x] Configurar variável de ambiente com a URL base da API
+- [x] Criar client HTTP (ex.: axios/fetch wrapper) em `services/api`
+- [x] Configurar roteamento entre as 3 páginas exigidas
 
 ## Etapa 10 – Frontend: Listagem de Produtos
 
-- [ ] Criar página de listagem de produtos (`ProductList`)
-- [ ] Consumir `GET /products` (com paginação, se implementada)
-- [ ] Exibir nome, preço e categoria na listagem
-- [ ] Link/botão para acessar detalhes de um produto
-- [ ] Link/botão para criar novo produto
+- [x] Criar página de listagem de produtos (`ProductList`)
+- [x] Consumir `GET /products` (com paginação, se implementada)
+- [x] Exibir nome, preço e categoria na listagem
+- [x] Link/botão para acessar detalhes de um produto
+- [x] Link/botão para criar novo produto
 
 ## Etapa 11 – Frontend: Formulário de Criar/Editar Produto
 
-- [ ] Criar página/formulário de produto (`ProductForm`)
-- [ ] Implementar criação de produto (`POST /products`)
-- [ ] Implementar edição de produto (`PUT/PATCH /products/:id`)
-- [ ] Carregar lista de categorias no formulário (`GET /categories`)
-- [ ] Validações básicas de formulário (campos obrigatórios)
+- [x] Criar página/formulário de produto (`ProductForm`)
+- [x] Implementar criação de produto (`POST /products`)
+- [x] Implementar edição de produto (`PUT/PATCH /products/:id`)
+- [x] Carregar lista de categorias no formulário (`GET /categories`)
+- [x] Validações básicas de formulário (campos obrigatórios)
 
 ## Etapa 12 – Frontend: Detalhes do Produto
 
-- [ ] Criar página de detalhes (`ProductDetails`)
-- [ ] Consumir `GET /products/:id`
-- [ ] Exibir todos os dados do produto, incluindo categoria
+- [x] Criar página de detalhes (`ProductDetails`)
+- [x] Consumir `GET /products/:id`
+- [x] Exibir todos os dados do produto, incluindo categoria
 
 ## Etapa 13 – Integração Final
 
-- [ ] Validar fluxo completo: criar categoria → criar produto → listar → ver detalhes → editar → remover
-- [ ] Validar que o cache é invalidado corretamente após as operações via frontend
-- [ ] Ajustar CORS/URLs de ambiente para rodar tudo via docker-compose
+- [x] Validar fluxo completo: criar categoria → criar produto → listar → ver detalhes → editar → remover
+- [x] Validar que o cache é invalidado corretamente após as operações via frontend
+- [x] Ajustar CORS/URLs de ambiente para rodar tudo via docker-compose
 
 ## Etapa 14 – Documentação e Entrega
 
-- [ ] Escrever `README.md` final (máx. 1 página): como subir backend/frontend, como testar endpoints, estratégia de cache
-- [ ] Revisar `.env.example` de backend e frontend
-- [ ] Validar subida completa via `docker-compose up`
-- [ ] Revisar estrutura final do repositório
-- [ ] Atualizar `docs/progress.md` com status final
-- [ ] Publicar repositório (GitHub ou similar)
+- [x] Escrever `README.md` final (máx. 1 página): como subir backend/frontend, como testar endpoints, estratégia de cache
+- [x] Revisar `.env.example` de backend e frontend
+- [x] Validar subida completa via `docker-compose up`
+- [x] Revisar estrutura final do repositório
+- [x] Atualizar `docs/progress.md` com status final
+- [x] Publicar repositório (GitHub ou similar)

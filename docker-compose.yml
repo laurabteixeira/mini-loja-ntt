@@ -42,6 +42,7 @@ services:
       REDIS_URL: redis://redis:6379
       CACHE_TTL: ${CACHE_TTL:-60}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      RUN_SEED: ${RUN_SEED:-true}
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,11 +53,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     container_name: mini-loja-frontend
     ports:
       - "${FRONTEND_PORT:-5173}:80"
-    environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     depends_on:
       - backend
 
