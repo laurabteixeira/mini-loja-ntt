@@ -1,24 +1,23 @@
 import { NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../prisma/prisma.service';
+import { CATEGORY_REPOSITORY } from '../categories/repositories/category.repository';
 import { CacheService } from '../cache/cache.service';
 import { ProductsService } from './products.service';
+import { PRODUCT_REPOSITORY } from './repositories/product.repository';
 
 describe('ProductsService', () => {
   let service: ProductsService;
-  let prisma: {
-    product: {
-      create: jest.Mock;
-      findMany: jest.Mock;
-      count: jest.Mock;
-      findUnique: jest.Mock;
-      update: jest.Mock;
-      delete: jest.Mock;
-    };
-    category: {
-      findUnique: jest.Mock;
-    };
+  let productRepository: {
+    create: jest.Mock;
+    findManyPaginated: jest.Mock;
+    findById: jest.Mock;
+    existsById: jest.Mock;
+    update: jest.Mock;
+    delete: jest.Mock;
+  };
+  let categoryRepository: {
+    existsById: jest.Mock;
   };
   let cache: {
     get: jest.Mock;
@@ -28,18 +27,17 @@ describe('ProductsService', () => {
   };
 
   beforeEach(async () => {
-    prisma = {
-      product: {
-        create: jest.fn(),
-        findMany: jest.fn(),
-        count: jest.fn(),
-        findUnique: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-      },
-      category: {
-        findUnique: jest.fn(),
-      },
+    productRepository = {
+      create: jest.fn(),
+      findManyPaginated: jest.fn(),
+      findById: jest.fn(),
+      existsById: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    };
+
+    categoryRepository = {
+      existsById: jest.fn(),
     };
 
     cache = {
@@ -52,7 +50,8 @@ describe('ProductsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductsService,
-        { provide: PrismaService, useValue: prisma },
+        { provide: PRODUCT_REPOSITORY, useValue: productRepository },
+        { provide: CATEGORY_REPOSITORY, useValue: categoryRepository },
         { provide: CacheService, useValue: cache },
         {
           provide: ConfigService,
@@ -72,7 +71,7 @@ describe('ProductsService', () => {
 
     expect(cache.get).toHaveBeenCalledWith('product:1');
     expect(result).toEqual(cachedProduct);
-    expect(prisma.product.findUnique).not.toHaveBeenCalled();
+    expect(productRepository.findById).not.toHaveBeenCalled();
   });
 
   it('stores product in cache on cache miss', async () => {
@@ -86,7 +85,7 @@ describe('ProductsService', () => {
     };
 
     cache.get.mockResolvedValue(null);
-    prisma.product.findUnique.mockResolvedValue(product);
+    productRepository.findById.mockResolvedValue(product);
 
     const result = await service.findOne(1);
 
@@ -100,7 +99,7 @@ describe('ProductsService', () => {
 
   it('throws NotFoundException when product does not exist', async () => {
     cache.get.mockResolvedValue(null);
-    prisma.product.findUnique.mockResolvedValue(null);
+    productRepository.findById.mockResolvedValue(null);
 
     await expect(service.findOne(99)).rejects.toThrow(NotFoundException);
     expect(cache.set).not.toHaveBeenCalled();
@@ -125,12 +124,12 @@ describe('ProductsService', () => {
       'products:list:page=2:limit=5:categoryId=3:search=phone',
     );
     expect(result).toEqual(listResult);
-    expect(prisma.product.findMany).not.toHaveBeenCalled();
+    expect(productRepository.findManyPaginated).not.toHaveBeenCalled();
   });
 
   it('invalidates product detail and list caches on update', async () => {
-    prisma.product.findUnique.mockResolvedValue({ id: 1 });
-    prisma.product.update.mockResolvedValue({
+    productRepository.existsById.mockResolvedValue(true);
+    productRepository.update.mockResolvedValue({
       id: 1,
       name: 'Updated',
       categoryId: 1,
@@ -144,8 +143,8 @@ describe('ProductsService', () => {
   });
 
   it('invalidates list cache on create', async () => {
-    prisma.category.findUnique.mockResolvedValue({ id: 1, name: 'Cat' });
-    prisma.product.create.mockResolvedValue({
+    categoryRepository.existsById.mockResolvedValue(true);
+    productRepository.create.mockResolvedValue({
       id: 1,
       name: 'New',
       categoryId: 1,
