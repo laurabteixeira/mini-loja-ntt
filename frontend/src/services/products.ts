@@ -4,6 +4,8 @@ import { api } from './api';
 export interface ListProductsParams {
   page?: number;
   limit?: number;
+  categoryId?: number;
+  search?: string;
 }
 
 export interface CreateProductInput {
@@ -11,6 +13,7 @@ export interface CreateProductInput {
   description: string;
   price: number;
   categoryId: number;
+  imageUrl?: string;
 }
 
 export type UpdateProductInput = Partial<CreateProductInput>;
@@ -24,6 +27,14 @@ export function listProducts(params: ListProductsParams = {}) {
 
   if (params.limit !== undefined) {
     searchParams.set('limit', String(params.limit));
+  }
+
+  if (params.categoryId !== undefined) {
+    searchParams.set('categoryId', String(params.categoryId));
+  }
+
+  if (params.search?.trim()) {
+    searchParams.set('search', params.search.trim());
   }
 
   const query = searchParams.toString();
