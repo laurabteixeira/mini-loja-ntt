@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FIELD_LIMITS } from '@/lib/field-limits';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -31,22 +32,37 @@ export function CategoryFormDialog({
   onSubmit,
 }: CategoryFormDialogProps) {
   const [name, setName] = useState(initialName);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const isEditing = mode === 'edit';
 
   useEffect(() => {
     if (open) {
       setName(initialName);
+      setValidationError(null);
     }
   }, [open, initialName]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = name.trim();
+
     if (!trimmed) {
+      setValidationError('Nome é obrigatório.');
       return;
     }
+
+    if (trimmed.length > FIELD_LIMITS.categoryName) {
+      setValidationError(
+        `O nome deve ter no máximo ${FIELD_LIMITS.categoryName} caracteres.`,
+      );
+      return;
+    }
+
+    setValidationError(null);
     onSubmit(trimmed);
   }
+
+  const displayError = validationError ?? error;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,12 +86,21 @@ export function CategoryFormDialog({
             <Input
               id="category-name"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => {
+                setName(event.target.value);
+                if (validationError) {
+                  setValidationError(null);
+                }
+              }}
               placeholder="Ex: Eletrônicos"
+              maxLength={FIELD_LIMITS.categoryName}
               autoFocus
             />
-            {error && (
-              <p className="mt-1.5 text-sm text-red-600">{error}</p>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Até {FIELD_LIMITS.categoryName} caracteres.
+            </p>
+            {displayError && (
+              <p className="mt-1.5 text-sm text-red-600">{displayError}</p>
             )}
           </div>
 

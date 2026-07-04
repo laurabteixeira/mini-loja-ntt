@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { FIELD_LIMITS } from '@/lib/field-limits';
 import type { Category } from '@/types/category';
 
 export interface ProductFormValues {
@@ -54,6 +55,7 @@ export function ProductFormFields({
           name="name"
           type="text"
           placeholder="Ex: Fone Sonic Pro Z1"
+          maxLength={FIELD_LIMITS.productName}
           value={form.name}
           onChange={(event) => onChange('name', event.target.value)}
         />
@@ -70,12 +72,12 @@ export function ProductFormFields({
           id="description"
           name="description"
           placeholder="Descreva o produto..."
-          maxLength={400}
+          maxLength={FIELD_LIMITS.productDescription}
           value={form.description}
           onChange={(event) => onChange('description', event.target.value)}
         />
         <p className="mt-1.5 text-xs text-muted-foreground">
-          Um resumo claro do produto (até 400 caracteres).
+          Um resumo claro do produto (até {FIELD_LIMITS.productDescription} caracteres).
         </p>
         {errors.description && (
           <p className="mt-1.5 text-sm text-red-600">{errors.description}</p>
@@ -121,6 +123,7 @@ export function ProductFormFields({
             name="price"
             type="number"
             min="0.01"
+            max={FIELD_LIMITS.productPriceMax}
             step="0.01"
             placeholder="0"
             value={form.price}
@@ -141,6 +144,7 @@ export function ProductFormFields({
           name="imageUrl"
           type="url"
           placeholder="https://..."
+          maxLength={FIELD_LIMITS.productImageUrl}
           value={form.imageUrl}
           onChange={(event) => onChange('imageUrl', event.target.value)}
         />

@@ -8,21 +8,33 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { FIELD_LIMITS } from '../../common/validation/field-limits';
 
 export class QueryProductDto {
-  @ApiPropertyOptional({ example: 1, default: 1, minimum: 1 })
+  @ApiPropertyOptional({
+    example: 1,
+    default: 1,
+    minimum: 1,
+    maximum: FIELD_LIMITS.queryPageMax,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(FIELD_LIMITS.queryPageMax)
   page?: number = 1;
 
-  @ApiPropertyOptional({ example: 10, default: 10, minimum: 1, maximum: 100 })
+  @ApiPropertyOptional({
+    example: 10,
+    default: 10,
+    minimum: 1,
+    maximum: FIELD_LIMITS.queryLimitMax,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(FIELD_LIMITS.queryLimitMax)
   limit?: number = 10;
 
   @ApiPropertyOptional({
@@ -38,11 +50,11 @@ export class QueryProductDto {
 
   @ApiPropertyOptional({
     example: 'notebook',
-    maxLength: 100,
+    maxLength: FIELD_LIMITS.querySearch,
     description: 'Search in product name and description',
   })
   @IsOptional()
   @IsString()
-  @MaxLength(100)
+  @MaxLength(FIELD_LIMITS.querySearch)
   search?: string;
 }

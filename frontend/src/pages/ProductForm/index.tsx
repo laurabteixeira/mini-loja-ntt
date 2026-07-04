@@ -18,6 +18,8 @@ import {
 } from '@/services/products';
 import type { Category } from '@/types/category';
 
+import { FIELD_LIMITS } from '@/lib/field-limits';
+
 const emptyForm: ProductFormValues = {
   name: '',
   description: '',
@@ -26,24 +28,26 @@ const emptyForm: ProductFormValues = {
   imageUrl: '',
 };
 
-const DESCRIPTION_MAX_LENGTH = 400;
-
 function validateForm(values: ProductFormValues): ProductFormFieldErrors {
   const errors: ProductFormFieldErrors = {};
 
   if (!values.name.trim()) {
     errors.name = 'Nome é obrigatório.';
+  } else if (values.name.trim().length > FIELD_LIMITS.productName) {
+    errors.name = `O nome deve ter no máximo ${FIELD_LIMITS.productName} caracteres.`;
   }
 
   if (!values.description.trim()) {
     errors.description = 'Descrição é obrigatória.';
-  } else if (values.description.trim().length > DESCRIPTION_MAX_LENGTH) {
-    errors.description = `A descrição deve ter no máximo ${DESCRIPTION_MAX_LENGTH} caracteres.`;
+  } else if (values.description.trim().length > FIELD_LIMITS.productDescription) {
+    errors.description = `A descrição deve ter no máximo ${FIELD_LIMITS.productDescription} caracteres.`;
   }
 
   const price = Number(values.price);
   if (!values.price.trim() || Number.isNaN(price) || price <= 0) {
     errors.price = 'Informe um preço válido maior que zero.';
+  } else if (price > FIELD_LIMITS.productPriceMax) {
+    errors.price = `O preço não pode exceder R$ ${FIELD_LIMITS.productPriceMax.toLocaleString('pt-BR')}.`;
   }
 
   if (!values.categoryId) {
@@ -52,10 +56,14 @@ function validateForm(values: ProductFormValues): ProductFormFieldErrors {
 
   const imageUrl = values.imageUrl.trim();
   if (imageUrl) {
-    try {
-      new URL(imageUrl);
-    } catch {
-      errors.imageUrl = 'Informe uma URL válida.';
+    if (imageUrl.length > FIELD_LIMITS.productImageUrl) {
+      errors.imageUrl = `A URL deve ter no máximo ${FIELD_LIMITS.productImageUrl} caracteres.`;
+    } else {
+      try {
+        new URL(imageUrl);
+      } catch {
+        errors.imageUrl = 'Informe uma URL válida.';
+      }
     }
   }
 
