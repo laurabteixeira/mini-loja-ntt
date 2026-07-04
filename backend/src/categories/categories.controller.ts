@@ -11,15 +11,19 @@ import {
   Post,
 } from '@nestjs/common';
 import {
-  ApiConflictResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
-  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import {
+  ApiCategoryByIdErrorResponses,
+  ApiCategoryCreateErrorResponses,
+  ApiCategoryDeleteErrorResponses,
+  ApiCategoryUpdateErrorResponses,
+} from '../swagger/decorators/api-error-responses.decorator';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -34,6 +38,7 @@ export class CategoriesController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a category' })
   @ApiCreatedResponse({ type: CategoryResponseDto })
+  @ApiCategoryCreateErrorResponses()
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoriesService.create(createCategoryDto);
   }
@@ -49,7 +54,7 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Get category by id' })
   @ApiParam({ name: 'id', example: 1 })
   @ApiOkResponse({ type: CategoryResponseDto })
-  @ApiNotFoundResponse({ description: 'Category not found' })
+  @ApiCategoryByIdErrorResponses()
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.categoriesService.findOne(id);
   }
@@ -58,7 +63,7 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Update a category' })
   @ApiParam({ name: 'id', example: 1 })
   @ApiOkResponse({ type: CategoryResponseDto })
-  @ApiNotFoundResponse({ description: 'Category not found' })
+  @ApiCategoryUpdateErrorResponses()
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -75,10 +80,7 @@ export class CategoriesController {
   })
   @ApiParam({ name: 'id', example: 1 })
   @ApiNoContentResponse({ description: 'Category deleted' })
-  @ApiNotFoundResponse({ description: 'Category not found' })
-  @ApiConflictResponse({
-    description: 'Category has associated products and cannot be deleted',
-  })
+  @ApiCategoryDeleteErrorResponses()
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.categoriesService.remove(id);
   }
