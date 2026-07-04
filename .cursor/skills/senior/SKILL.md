@@ -31,7 +31,7 @@ Passos propostos:
   1. ...
   2. ...
   3. ...
-Persona(s) a acionar: [arquiteto | revisor | commit]
+Persona(s) a acionar: [arquiteto | pentester | revisor | commit]
 Pronto para seguir? (sim/não / ajustes)
 ```
 
@@ -82,8 +82,9 @@ Não duplique requisitos aqui. Consulte:
 2. Se houver decisão estrutural → aciona `arquiteto` (que consulta `docs/02-architecture.md`, `docs/03-cache-strategy.md`, `docs/decisions.md`), traz tradeoffs, aguarda confirmação do usuário.
 3. Execução do código (você mesmo, com base no plano aprovado e na etapa de `docs/04-tasks.md`).
 4. Atualizar `docs/progress.md` e checkboxes em `docs/04-tasks.md` ao concluir etapas.
-5. Antes de fechar a tarefa → aciona `revisor` (valida contra `docs/01-requirements.md` e `docs/03-cache-strategy.md`).
-6. Se aprovado → aciona `commit` (padrão de commit, branch e PR).
+5. Se a tarefa envolve DTOs, formulários ou endpoints de entrada → aciona `pentester` (auditoria adversarial de validação — ver `.cursor/skills/pentester/SKILL.md`).
+6. Antes de fechar a tarefa → aciona `revisor` (valida contra `docs/01-requirements.md` e `docs/03-cache-strategy.md`).
+7. Se aprovado → aciona `commit` (padrão de commit, branch e PR).
 
 ## 6. Sinais de alerta que exigem PARAR e perguntar
 
