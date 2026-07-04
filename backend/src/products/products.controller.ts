@@ -14,12 +14,18 @@ import {
 import {
   ApiCreatedResponse,
   ApiNoContentResponse,
-  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import {
+  ApiProductByIdErrorResponses,
+  ApiProductCreateErrorResponses,
+  ApiProductDeleteErrorResponses,
+  ApiProductListErrorResponses,
+  ApiProductUpdateErrorResponses,
+} from '../swagger/decorators/api-error-responses.decorator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -38,6 +44,7 @@ export class ProductsController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a product' })
   @ApiCreatedResponse({ type: ProductResponseDto })
+  @ApiProductCreateErrorResponses()
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
   }
@@ -49,6 +56,7 @@ export class ProductsController {
       'Supports optional filters `categoryId` and `search`. Response is cached per query combination.',
   })
   @ApiOkResponse({ type: PaginatedProductsResponseDto })
+  @ApiProductListErrorResponses()
   findAll(@Query() query: QueryProductDto) {
     return this.productsService.findAll(query);
   }
@@ -57,7 +65,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Get product by id (cached in Redis)' })
   @ApiParam({ name: 'id', example: 1 })
   @ApiOkResponse({ type: ProductResponseDto })
-  @ApiNotFoundResponse({ description: 'Product not found' })
+  @ApiProductByIdErrorResponses()
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.findOne(id);
   }
@@ -66,7 +74,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Update a product' })
   @ApiParam({ name: 'id', example: 1 })
   @ApiOkResponse({ type: ProductResponseDto })
-  @ApiNotFoundResponse({ description: 'Product not found' })
+  @ApiProductUpdateErrorResponses()
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProductDto: UpdateProductDto,
@@ -79,7 +87,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Delete a product' })
   @ApiParam({ name: 'id', example: 1 })
   @ApiNoContentResponse({ description: 'Product deleted' })
-  @ApiNotFoundResponse({ description: 'Product not found' })
+  @ApiProductDeleteErrorResponses()
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.remove(id);
   }
