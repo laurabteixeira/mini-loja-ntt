@@ -31,7 +31,18 @@ O backend aplica migrations automaticamente no startup (`prisma migrate deploy`)
 
 Guia de testes manuais no Insomnia: [`docs/05-insomnia-testing.md`](docs/05-insomnia-testing.md).
 
-> Backend NestJS + Prisma (Etapas 2–8). Frontend ainda placeholder até Etapa 9.
+> Frontend completo (Etapas 9–13). Integração: [`docs/06-integration-testing.md`](docs/06-integration-testing.md).
+
+## Integração (docker-compose)
+
+```bash
+cp .env.example .env   # opcional
+docker compose up --build -d
+```
+
+- Frontend: http://localhost:5173  
+- Backend seed roda no startup do container (categorias/produtos demo)  
+- Validação automatizada: `./scripts/validate-integration.sh`
 
 ## Estratégia de cache (Redis)
 
@@ -46,9 +57,9 @@ Cache-aside apenas em leituras de produtos (`docs/03-cache-strategy.md`):
 - **Invalidação:** em create/update/delete de produto, remove `products:list:*`; em update/delete, remove também `product:{id}`.
 - Detalhes e cenários de teste: [`docs/03-cache-strategy.md`](docs/03-cache-strategy.md) e [`docs/05-insomnia-testing.md`](docs/05-insomnia-testing.md).
 
-## Testes (backend)
+## Testes
 
-Requer PostgreSQL e Redis acessíveis (ex.: `docker compose up postgres redis`):
+**Backend** — requer PostgreSQL e Redis (ex.: `docker compose up postgres redis`):
 
 ```bash
 cd backend
@@ -60,6 +71,15 @@ npm run test:e2e
 ```
 
 > **e2e:** exige `docker compose up postgres redis` e `backend/.env` (copie de `.env.example`). Postgres do compose usa porta **5433** no host por padrão.
+
+**Frontend:**
+
+```bash
+cd frontend
+npm install
+npm run lint
+npm run build
+```
 
 ## Stack
 

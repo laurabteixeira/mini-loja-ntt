@@ -8,8 +8,38 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
+  const corsOrigin = configService.get<string>(
+    'CORS_ORIGIN',
+    'http://localhost:5173',
+  );
+  const allowedOrigins = corsOrigin.split(',').map((origin) => origin.trim());
+  const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN', 'http://localhost:5173'),
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean | string) => void,
+    ) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, origin);
+        return;
+      }
+
+      if (
+        nodeEnv !== 'production' &&
+        /^http:\/\/localhost:\d+$/.test(origin)
+      ) {
+        callback(null, origin);
+        return;
+      }
+
+      callback(null, false);
+    },
   });
 
   app.useGlobalFilters(new HttpExceptionFilter());

@@ -52,11 +52,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     container_name: mini-loja-frontend
     ports:
       - "${FRONTEND_PORT:-5173}:80"
-    environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     depends_on:
       - backend
 
